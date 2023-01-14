@@ -1,0 +1,15 @@
+{
+  "name": "igc",
+  "dependencies": {
+    "ol": "7.1.0",
+    "openlayers": "^4.6.5"
+  },
+  "devDependencies": {
+    "@babel/core": "latest",
+    "vite": "^3.0.3"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "vite build"
+  }
+}

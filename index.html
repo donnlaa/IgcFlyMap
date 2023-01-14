@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>IGC Data</title>
+    <link rel="stylesheet" href="node_modules/ol/ol.css">
+    <link rel="stylesheet" href="./style2.css">
+    <style>
+      .map {
+        width: 100%;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+  <section id="header">
+    <div class="header container">
+      <div class="nav-bar">
+        <div class="brand">
+          <a href="./index.html">
+            <h1>IGCMapViewer</h1>
+          </a>
+        </div>
+        <div class="nav-list">
+          <div class="hamburger">
+            <div class="bar"></div>
+          </div>
+          <ul>
+            <li><a href="./index.html" data-after="Mapa">Mapa</a></li>
+            <li><a href="./zaznam.html" data-after="Vložiť záznam">Vložiť záznam</a></li>
+            <li><a href="./navod.html" data-after="Návod">Dokumentácia</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- End Header -->
+    
+    <div id="map" class="map"></div>
+    <input id="time" type="range" value="0" steps="1" />
+    <div id="info">&nbsp;</div>
+    <!-- <div id="flight-info"></div> -->
+    <table id="flight-table">
+      <tr>
+        <th>Pilot</th>
+        <th>Glider</th>
+        <th>Dĺžka letu</th>
+        <th>Dĺžka trate</th>
+      </tr>
+    </table>
+    
+    <!-- Footer -->
+    <section id="footer">
+      <div class="footer container">
+        <div class="brand">
+          <h1>IGCMapViewer</h1>
+        </div>
+        <h2>Zobrazte dáta letu ľahko a jednoducho</h2>
+        <p>Copyright © 2022 IGCMapViewer</p>
+      </div>
+    </section>
+    <!-- End Footer -->
+    <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+    <script src="https://unpkg.com/elm-pep@1.0.6/dist/elm-pep.js"></script>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
