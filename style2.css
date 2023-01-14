@@ -544,8 +544,8 @@ p {
 table {
 	border-collapse: collapse;
 	width: 75%;
-	margin: auto;
-	margin-bottom: 40px;
+	margin-top: 200px;
+	margin-left: 100px;
 	font-family: Arial, sans-serif; /* Add a font family */
 	font-size: 14px;
   }
@@ -570,3 +570,19 @@ table {
   tr:hover {
 	background-color: #ddd; /* Add a hover effect for rows */
   }
+
+  #containerall{
+	display: flex;
+	margin-top: 65px;
+  }
+
+  #containerigc{
+	flex: 1;
+	margin-left: 20px;
+	margin-top: 20px;
+  }
+  #containertab{
+	flex: 1;
+  }
+
+  
