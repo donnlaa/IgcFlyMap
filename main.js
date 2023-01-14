@@ -77,6 +77,7 @@ const vectorLayer = new VectorLayer({
   source: vectorSource,
   style: styleFunction,
 });
+
 // vytvorenie mapy
 
 const map = new Map({
@@ -144,15 +145,18 @@ map.on('click', function (evt) {
   displaySnap(evt.coordinate);
 });
 
+// Zmena štýlu kurzora pri hovering na flight tracku
 const stroke = new Stroke({
-  color: 'rgba(255,0,0,0.9)',
-  width: 1,
+  color: 'white',
+  width: 1.5,
 });
 const style = new Style({
   stroke: stroke,
   image: new CircleStyle({
-    radius: 5,
-    fill: null,
+    radius: 6,
+    fill: new Fill({
+      color:'red'
+    }),
     stroke: stroke,
   }),
 });
@@ -166,16 +170,17 @@ vectorLayer.on('postrender', function (evt) {
     vectorContext.drawGeometry(line);
   }
 });
-
+// nizsie je tiež štýl kurzora ale toho ktory beha po trajektórii
 const featureOverlay = new VectorLayer({
   source: new VectorSource(),
   map: map,
   style: new Style({
     image: new CircleStyle({
-      radius: 5,
+      radius: 6,
       fill: new Fill({
-        color: 'rgba(255,0,0,0.9)',
+        color: 'red',
       }),
+      stroke: stroke,
     }),
   }),
 });
