@@ -8,6 +8,7 @@ import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
 import {LineString, Point} from 'ol/geom';
 import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
 import {getVectorContext} from 'ol/render';
+import {fromLonLat} from 'ol/proj';
 
 const colors = {
   'Marek Kováč': 'rgba(0, 0, 255, 0.7)',
@@ -106,9 +107,20 @@ const map = new Map({
   target: 'map',
   view: new View({
     
-    zoom: 10,
+    zoom: 9,
   }),
 });
+// zobrazenie mapy na začiatku otvorenia webu na použivatelovu lokalitu
+navigator.geolocation.getCurrentPosition(function(position) {
+  // Convert the user's location to EPSG:3857
+  const center = fromLonLat([position.coords.longitude, position.coords.latitude]);
+  // Center the map on the user's location
+  map.getView().setCenter(center);
+}, function() {
+  // If location could not be determined, center the map on default location
+  map.getView().setCenter(fromLonLat([0, 0]));
+});
+
 
 let point = null;
 let line = null;
