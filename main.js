@@ -31,31 +31,39 @@ const styleFunction = function (feature) {
 };
 
 const vectorSource = new VectorSource();
-// cesta k igc súboru
-const igcUrls = [
-  '/Users/ladislavdono/my-app/igc/igc1',
-  // '/Users/ladislavdono/my-app/igc/igc2',
-  // '/Users/ladislavdono/my-app/igc/igc3',
-  //  '/Users/ladislavdono/my-app/igc/igc4',
-];
-// citanie dat zo subora, pouzity fetch (blob) aby sa dal spracovat text zo suboru
-let reader = new FileReader();
-for (let i = 0; i < igcUrls.length; ++i) {
-  fetch(igcUrls[i]) 
-  .then((response) => response.blob())
-  .then((blob) => {
-    reader.onload = function () {
-      const data = reader.result;
-      const features = igcFormat.readFeatures(data, {
-        featureProjection: 'EPSG:3857',
-      });
-      vectorSource.addFeatures(features);
-    };
-    reader.readAsText(blob);
-  });
-}
-const igcFormat = new IGC();
 
+let reader = new FileReader();
+
+//tlacidlo
+const fileInput = document.createElement("input");
+fileInput.setAttribute("type", "file");
+
+
+//vytvorenie tlacidla
+const importButton = document.createElement("button");
+importButton.innerHTML = "Vložiť .IGC";
+
+//add event listener to the button
+importButton.addEventListener("click", function(){
+  fileInput.click();
+});
+
+//add event listener for file input
+fileInput.addEventListener("change", function(){
+  const file = fileInput.files[0];
+  reader.onload = function () {
+    const data = reader.result;
+    const features = igcFormat.readFeatures(data, {
+      featureProjection: 'EPSG:3857',
+    });
+    vectorSource.addFeatures(features);
+  };
+  reader.readAsText(file);
+});
+
+const igcFormat = new IGC();
+importButton.setAttribute("id", "import-button");
+document.body.appendChild(importButton);
 const time = {
   start: Infinity,
   stop: -Infinity,
@@ -218,24 +226,28 @@ function toTimeString(totalSeconds) { // funkcia na premenu sekund na normalny f
 let pilotName;
 let duration;
 let gliderName;
-for (let i = 0; i < igcUrls.length; ++i) {
-  fetch(igcUrls[i])
-    .then((response) => response.text())
-    .then((data) => {
-      const features = igcFormat.readFeatures(data, {
-        featureProjection: 'EPSG:3857',
-      });
-      vectorSource.addFeatures(features);
-      pilotName = features[0].get('PLT');
-      gliderName = features[0].get('GTY');
-      duration = toTimeString(time.duration);
-      const table = document.getElementById("flight-table");
-      const row = table.insertRow();
-      const pilotCell = row.insertCell(0);
-      const gliderCell = row.insertCell(1);
-      const durationCell = row.insertCell(2);
-      pilotCell.innerHTML = pilotName;
-      gliderCell.innerHTML = gliderName;
-      durationCell.innerHTML = duration + "h";
+
+//add event listener for file input
+fileInput.addEventListener("change", function(){
+  const file = fileInput.files[0];
+  reader.onload = function () {
+    const data = reader.result;
+    const features = igcFormat.readFeatures(data, {
+      featureProjection: 'EPSG:3857',
     });
-}
+    vectorSource.addFeatures(features);
+    pilotName = features[0].get('PLT');
+    gliderName = features[0].get('GTY');
+    duration = toTimeString(time.duration);
+    const table = document.getElementById("flight-table");
+    const row = table.insertRow();
+    const pilotCell = row.insertCell(0);
+    const gliderCell = row.insertCell(1);
+    const durationCell = row.insertCell(2);
+    pilotCell.innerHTML = pilotName;
+    gliderCell.innerHTML = gliderName;
+    durationCell.innerHTML = duration + "h";
+  };
+  reader.readAsText(file);
+});
+

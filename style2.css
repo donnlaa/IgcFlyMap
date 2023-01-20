@@ -140,7 +140,7 @@ p {
 }
 .brand h1 {
 	font-size: 3rem;
-	text-transform: uppercase;
+	
 	color: white;
 }
 .brand h1 span {
@@ -584,5 +584,29 @@ table {
   #containertab{
 	flex: 1;
   }
+
+  #import-button {
+	position:absolute;
+	bottom: 400px;
+	left: 830px;
+	display: inline-block;
+	padding: 10px 30px;
+	color: white;
+	background-color: rgb(67, 68, 87);
+	border: 2px solid rgb(125, 125, 125);
+	font-size: 2rem;
+	text-transform: uppercase;
+	letter-spacing: 0.1rem;
+	margin-top: 700px;
+	margin-right: 50px;
+	transition: 0.3s ease;
+	transition-property: background-color, color;
+  }
+
+  #import-button:hover {
+	color: rgb(0, 0, 0);
+	background-color: rgb(186, 186, 186);
+	border: 2px solid rgb(63, 63, 63);
+}
 
   
