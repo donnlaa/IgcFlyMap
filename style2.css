@@ -574,22 +574,27 @@ table {
   #containerall{
 	display: flex;
 	margin-top: 65px;
+	justify-content: center;
+  }
+  .flex-container {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	width: 100%;
+	margin: 0 auto;
   }
 
   #containerigc{
-	flex: 1;
-	margin-left: 20px;
+	width: 50%;
 	margin-top: 20px;
+	margin-left: 20px;
   }
   #containertab{
-	flex: 1;
+	width: 50%;
+	position: relative;
   }
 
   #import-button {
-	position:absolute;
-	bottom: 400px;
-	left: 830px;
-	display: inline-block;
 	padding: 10px 30px;
 	color: white;
 	background-color: rgb(67, 68, 87);
@@ -597,16 +602,34 @@ table {
 	font-size: 2rem;
 	text-transform: uppercase;
 	letter-spacing: 0.1rem;
-	margin-top: 700px;
-	margin-right: 50px;
 	transition: 0.3s ease;
-	transition-property: background-color, color;
+	transition: background-color 0.2s ease-in-out;
+	cursor: pointer;
+	position: absolute;
+  	top: 500px;
+  	right: 420px;
   }
 
   #import-button:hover {
 	color: rgb(0, 0, 0);
 	background-color: rgb(186, 186, 186);
 	border: 2px solid rgb(63, 63, 63);
+}
+
+ #language-switcher_sk, #language-switcher_en {
+		padding: 8px 8px;
+		border-radius: 5px;
+		font-size: 14px;
+		color: rgb(0, 0, 0);
+		background-color: #e5e5e5;
+		cursor: pointer;
+		transition: background-color 0.2s ease-in-out;
+		width: 70px;
+		
+ }
+ #language-switcher_sk:hover, #language-switcher_en:hover {
+	background-color: #6c8095;
+	
 }
 
   

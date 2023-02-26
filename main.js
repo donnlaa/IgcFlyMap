@@ -41,10 +41,11 @@ fileInput.setAttribute("type", "file");
 
 
 //vytvorenie tlacidla
-const importButton = document.createElement("button");
-importButton.innerHTML = "Vložiť .IGC";
+// const importButton = document.createElement("button");
+// importButton.innerHTML = "Vložiť .IGC";
 
 //add event listener to the button
+var importButton = document.getElementById("import-button");
 importButton.addEventListener("click", function(){
   fileInput.click();
 });
@@ -118,7 +119,7 @@ navigator.geolocation.getCurrentPosition(function(position) {
   map.getView().setCenter(center);
 }, function() {
   // If location could not be determined, center the map on default location
-  map.getView().setCenter(fromLonLat([0, 0]));
+  map.getView().setCenter(fromLonLat([48.73050802516627, 21.245309835613693]));
 });
 
 

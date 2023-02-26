@@ -29,31 +29,38 @@
           </div>
           <ul>
             <li><a href="./index.html" data-after="Mapa">Mapa</a></li>
-            <li><a href="./zaznam.html" data-after="Vložiť záznam">Vložiť záznam</a></li>
-            <li><a href="#" data-after="Návod">Dokumentácia</a></li>
+            <li><a href="./zaznam.html" data-after="Vložiť záznam">Vložiť .igc</a></li>
+            <li><a href="./testhtml.html" data-after="O aplikácii">O aplikácii</a></li>
+            <button id="language-switcher_en">🇬🇧<strong>ENG</strong></button>
+        <button id="language-switcher_sk">🇸🇰<strong>SK</strong></button>
           </ul>
         </div>
       </div>
     </div>
   </section>
   <!-- End Header -->
+  
   <div id="containerall">
-    <div id="containerigc">
-    <div id="map" class="map"></div>
-    <input id="time" type="range" value="0" steps="1" />
-    <div id="info">&nbsp;</div></div>
-    <!-- <div id="flight-info"></div> -->
-    <div id="containertab">
-    <table id="flight-table">
-      <tr>
-        <th>Pilot</th>
-        <th>Glider</th>
-        <th>Dĺžka letu</th>
-      </tr>
-    </table>
-    
+    <div class="flex-container">
+      <div id="containerigc">
+        <div id="map" class="map"></div>
+        <input id="time" type="range" value="0" steps="1" />
+        <div id="info">&nbsp;</div>
+      </div>
+      <div id="containertab">
+        <button id="import-button">Vložiť .IGC</button>
+        <table id="flight-table">
+          <tr>
+            <th>Pilot</th>
+            <th>Glider</th>
+            <th>Dĺžka letu</th>
+          </tr>
+        </table>
+      </div>
+    </div>
   </div>
-</div>
+  <table id="table"></table>
+
     <!-- Footer -->
     <section id="footer">
       <div class="footer container">
@@ -62,12 +69,15 @@
         </div>
         <h2>Zobrazte dáta letu ľahko a jednoducho</h2>
         <p>Copyright © 2023 IgcToPdfOffline</p>
+        
+
       </div>
     </section>
     <!-- End Footer -->
    
     <script src="https://unpkg.com/elm-pep@1.0.6/dist/elm-pep.js"></script>
-    <script type="module" src="main.js"></script>
+    <script type="module" src="/main.js"></script>
+    <script type="module" src="/language.js"></script>
     
   </body>
 </html>

@@ -1,5 +1,20 @@
-export default {
+// export default {
+//   build: {
+//     sourcemap: true,
+//   }
+// }
+// vite.config.js
+import { resolve } from 'path'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
   build: {
-    sourcemap: true,
-  }
-}
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        nested: resolve(__dirname, 'testhtml.html'),
+      },
+    },
+  },
+})
+

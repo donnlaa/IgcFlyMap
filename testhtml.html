@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IGC Track Viewer</title>
+    
+    <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.84/Build/Cesium/Widgets/widgets.css">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.84/Build/Cesium/Cesium.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/igc-parser@1.1.0/index.min.js"></script>
+    <script>
+      Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNWRhMmYzMi03NzJmLTQzMWQtOTBjNC0xNDExZGVhOWRlZGEiLCJpZCI6MTI2MTY1LCJpYXQiOjE2NzcyMzgwMjV9.zVLhACU4c_P9pOaoDOOTPxb1ywhgiIL_rPS9SL54e8w';
+    </script>
+  </head>
+  <body>
+    <div id="cesiumContainer" style="height: 100%; width: 100%;"></div>
+    <input type="file" id="fileInput">
+    <script type="module" src="./testjs.js"></script>
+  </body>
+</html>

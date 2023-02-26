@@ -1,12 +1,17 @@
 {
   "name": "igc",
   "dependencies": {
+    "cesium": "^1.102.0",
+    "igc-parser": "^1.1.0",
     "ol": "7.1.0",
-    "openlayers": "^4.6.5"
+    "openlayers": "^3.17.1"
   },
   "devDependencies": {
     "@babel/core": "latest",
-    "vite": "^3.0.3"
+    "vite": "^3.0.3",
+    "vite-plugin-html": "^3.2.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-node-externals": "^3.0.0"
   },
   "scripts": {
     "start": "vite",
