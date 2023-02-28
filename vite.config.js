@@ -1,9 +1,4 @@
-// export default {
-//   build: {
-//     sourcemap: true,
-//   }
-// }
-// vite.config.js
+
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
 
@@ -13,6 +8,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         nested: resolve(__dirname, 'testhtml.html'),
+        
       },
     },
   },

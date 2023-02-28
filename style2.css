@@ -67,7 +67,7 @@ a {
 	align-items: center;
 	justify-content: left;
 }
-img {
+.imgPar {
 	height: 100%;
 	width: 100%;
 	object-fit: cover;
@@ -632,4 +632,7 @@ table {
 	
 }
 
+.container3D {
+	margin-top: 44px;
+}
   
