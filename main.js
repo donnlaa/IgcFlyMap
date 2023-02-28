@@ -125,6 +125,35 @@ navigator.geolocation.getCurrentPosition(function(position) {
 
 let point = null;
 let line = null;
+// const displaySnap = function (coordinate) {
+//   const closestFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
+//   const info = document.getElementById('info');
+//   if (closestFeature === null) {
+//     point = null;
+//     line = null;
+//     info.innerHTML = '&nbsp;';
+//   } else {
+//     const geometry = closestFeature.getGeometry();
+//     const closestPoint = geometry.getClosestPoint(coordinate);
+//     if (point === null) {
+//       point = new Point(closestPoint);
+//     } else {
+//       point.setCoordinates(closestPoint);
+//     }
+//     const date = new Date(closestPoint[2] * 1000);
+//     info.innerHTML =
+//       closestFeature.get('PLT') + ' (' + date.toUTCString() + ')';
+//     const coordinates = [coordinate, [closestPoint[0], closestPoint[1]]];
+//     if (line === null) {
+//       line = new LineString(coordinates);
+//     } else {
+//       line.setCoordinates(coordinates);
+//     }
+//   }
+//   map.render();
+// };
+
+
 const displaySnap = function (coordinate) {
   const closestFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
   const info = document.getElementById('info');
@@ -140,9 +169,10 @@ const displaySnap = function (coordinate) {
     } else {
       point.setCoordinates(closestPoint);
     }
-    const date = new Date(closestPoint[2] * 1000);
+    const seconds = new Date(closestPoint[2] * 1000);
+    const date = extractDate(reader.result); // Call extractDate function with file content
     info.innerHTML =
-      closestFeature.get('PLT') + ' (' + date.toUTCString() + ')';
+      closestFeature.get('PLT') + ' (' + date.toDateString()+ ')' + ' ' + seconds.toTimeString() ;
     const coordinates = [coordinate, [closestPoint[0], closestPoint[1]]];
     if (line === null) {
       line = new LineString(coordinates);
@@ -261,6 +291,29 @@ fileInput.addEventListener("change", function(){
     gliderCell.innerHTML = gliderName;
     durationCell.innerHTML = duration + "h";
   };
-  reader.readAsText(file);
+  
 });
 
+// NEW
+function extractDate(igcFile) {
+  // Date is recorded as: HFDTEddmmyy (where HFDTE is a literal and dddmmyy are digits).
+  // var dateRecord = igcFile.match(/H[FO]DTE([\d]{2})([\d]{2})([\d]{2})/);
+  var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
+  if (dateRecord === null) {
+      throw new IGCException('The file does not contain a date header.');
+  }
+
+  var day = parseInt(dateRecord[1], 10);
+  // Javascript numbers months from zero, not 1!
+  var month = parseInt(dateRecord[2], 10) - 1;
+  // The IGC specification has a built-in Millennium Bug (2-digit year).
+  // I will arbitrarily assume that any year before "80" is in the 21st century.
+  var year = parseInt(dateRecord[3], 10);
+
+  if (year < 80) {
+      year += 2000;
+  } else {
+      year += 1900;
+  }
+  return new Date(Date.UTC(year, month, day));
+}
