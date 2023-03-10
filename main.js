@@ -99,7 +99,7 @@ const map = new Map({
           ATTRIBUTION,
         ],
         url:
-          'https://{a-c}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png' +
+          'https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png' +
           '?apikey=2baf9b82946e43edaec9c963e83553a5',
       }),
     }),
@@ -119,40 +119,11 @@ navigator.geolocation.getCurrentPosition(function(position) {
   map.getView().setCenter(center);
 }, function() {
   // If location could not be determined, center the map on default location
-  map.getView().setCenter(fromLonLat([48.73050802516627, 21.245309835613693]));
+  map.getView().setCenter(fromLonLat([21.245309835613693, 48.73050802516627]));
 });
-
 
 let point = null;
 let line = null;
-// const displaySnap = function (coordinate) {
-//   const closestFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
-//   const info = document.getElementById('info');
-//   if (closestFeature === null) {
-//     point = null;
-//     line = null;
-//     info.innerHTML = '&nbsp;';
-//   } else {
-//     const geometry = closestFeature.getGeometry();
-//     const closestPoint = geometry.getClosestPoint(coordinate);
-//     if (point === null) {
-//       point = new Point(closestPoint);
-//     } else {
-//       point.setCoordinates(closestPoint);
-//     }
-//     const date = new Date(closestPoint[2] * 1000);
-//     info.innerHTML =
-//       closestFeature.get('PLT') + ' (' + date.toUTCString() + ')';
-//     const coordinates = [coordinate, [closestPoint[0], closestPoint[1]]];
-//     if (line === null) {
-//       line = new LineString(coordinates);
-//     } else {
-//       line.setCoordinates(coordinates);
-//     }
-//   }
-//   map.render();
-// };
-
 
 const displaySnap = function (coordinate) {
   const closestFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
