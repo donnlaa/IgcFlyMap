@@ -143,7 +143,7 @@ const displaySnap = function (coordinate) {
     const seconds = new Date(closestPoint[2] * 1000);
     const date = extractDate(reader.result); // Call extractDate function with file content
     info.innerHTML =
-      closestFeature.get('PLT') + ' (' + date.toDateString()+ ')' + ' ' + seconds.toTimeString() ;
+      closestFeature.get('PLT') + ' (' + date.toDateString()+ ')' + ' ' + seconds.toTimeString();
     const coordinates = [coordinate, [closestPoint[0], closestPoint[1]]];
     if (line === null) {
       line = new LineString(coordinates);
@@ -213,10 +213,7 @@ control.addEventListener('input', function () {
   const value = parseInt(control.value, 10) / 100;
   const m = time.start + time.duration * value;
   vectorSource.forEachFeature(function (feature) {
-    const geometry =
-      /** @type {import("../src/ol/geom/LineString.js").default} */ (
-        feature.getGeometry()
-      );
+    const geometry = feature.getGeometry();
     const coordinate = geometry.getCoordinateAtM(m, true);
     let highlight = feature.get('highlight');
     if (highlight === undefined) {
@@ -229,6 +226,47 @@ control.addEventListener('input', function () {
   });
   map.render();
 });
+const playButton = document.getElementById("play-button");
+playButton.addEventListener("click", function(){
+  const numSteps = 400;
+  const step = time.duration / numSteps; // smaller duration for smoother animation
+  let i = 0;
+  let lastStep = 0;
+  const animate = function(timestamp) {
+    const progress = Math.min((timestamp - start) / (step * 1000), 1);
+    control.value = progress * 100;
+    const m = time.start + time.duration * progress;
+    vectorSource.forEachFeature(function (feature) {
+      const geometry = feature.getGeometry();
+      const coordinate = geometry.getCoordinateAtM(m, true);
+      let highlight = feature.get('highlight');
+      if (highlight === undefined) {
+        highlight = new Feature(new Point(coordinate));
+        feature.set('highlight', highlight);
+        featureOverlay.getSource().addFeature(highlight);
+      } else {
+        highlight.getGeometry().setCoordinates(coordinate);
+      }
+    });
+    // update the map only every n steps
+    if (i % Math.floor(numSteps/100) === 0 || progress === 1) {
+      map.render();
+    }
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+    i++;
+  };
+  const start = performance.now();
+  requestAnimationFrame(animate);
+});
+
+
+
+
+
+
+
 // text pod mapou co pise informacie o lete... 
 function toTimeString(totalSeconds) { // funkcia na premenu sekund na normalny format casu
   const totalMs = totalSeconds * 1000;
@@ -288,3 +326,21 @@ function extractDate(igcFile) {
   }
   return new Date(Date.UTC(year, month, day));
 }
+function parseLatLong(latLongString) {
+  var latitude = parseFloat(latLongString.substring(0, 2)) +
+      parseFloat(latLongString.substring(2, 7)) / 60000.0;
+  if (latLongString.charAt(7) === 'S') {
+      latitude = -latitude;
+  }
+
+  var longitude = parseFloat(latLongString.substring(8, 11)) +
+      parseFloat(latLongString.substring(11, 16)) / 60000.0;
+  if (latLongString.charAt(16) === 'W') {
+      longitude = -longitude;
+  }
+
+  return [latitude, longitude];
+}
+
+
+
