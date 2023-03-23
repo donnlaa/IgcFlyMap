@@ -1,14 +1,16 @@
 import Feature from 'ol/Feature';
 import IGC from 'ol/format/IGC';
 import Map from 'ol/Map';
-import OSM, {ATTRIBUTION} from 'ol/source/OSM';
+import OSM, { ATTRIBUTION } from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
 import View from 'ol/View';
-import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
-import {LineString, Point} from 'ol/geom';
-import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
-import {getVectorContext} from 'ol/render';
-import {fromLonLat} from 'ol/proj';
+import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { LineString, Point } from 'ol/geom';
+import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
+import { getVectorContext } from 'ol/render';
+import { fromLonLat } from 'ol/proj';
+
+
 
 const colors = {
   'Marek Kováč': 'rgba(0, 0, 255, 0.7)',
@@ -17,19 +19,32 @@ const colors = {
 
 const styleCache = {};
 const styleFunction = function (feature) {
-  const color = colors[feature.get('PLT')];
-  let style = styleCache[color];
+  const pilotName = feature.get('PLT');
+  let style = styleCache[pilotName];
   if (!style) {
+    const color = getRandomColor();
     style = new Style({
       stroke: new Stroke({
         color: color,
         width: 3,
       }),
     });
-    styleCache[color] = style;
+    styleCache[pilotName] = style;
   }
   return style;
 };
+
+
+
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
 
 const vectorSource = new VectorSource();
 
@@ -38,20 +53,17 @@ let reader = new FileReader();
 //tlacidlo
 const fileInput = document.createElement("input");
 fileInput.setAttribute("type", "file");
+fileInput.setAttribute("multiple", ""); // Add this line to accept multiple files
 
-
-//vytvorenie tlacidla
-// const importButton = document.createElement("button");
-// importButton.innerHTML = "Vložiť .IGC";
 
 //add event listener to the button
 var importButton = document.getElementById("import-button");
-importButton.addEventListener("click", function(){
+importButton.addEventListener("click", function () {
   fileInput.click();
 });
 
 //add event listener for file input
-fileInput.addEventListener("change", function(){
+fileInput.addEventListener("change", function () {
   const file = fileInput.files[0];
   reader.onload = function () {
     const data = reader.result;
@@ -64,8 +76,8 @@ fileInput.addEventListener("change", function(){
 });
 
 const igcFormat = new IGC();
-importButton.setAttribute("id", "import-button");
-document.body.appendChild(importButton);
+// importButton.setAttribute("id", "import-button");
+// document.body.appendChild(importButton);
 const time = {
   start: Infinity,
   stop: -Infinity,
@@ -78,9 +90,9 @@ vectorSource.on('addfeature', function (event) {
   time.stop = Math.max(time.stop, geometry.getLastCoordinate()[2]);
   time.duration = time.stop - time.start;
   // nizsie sa centruje mapa na dany let kde zacina
-    const flightGeometry = event.feature.getGeometry();
-    const startingPoint = flightGeometry.getFirstCoordinate();
-    map.getView().setCenter(startingPoint);
+  const flightGeometry = event.feature.getGeometry();
+  const startingPoint = flightGeometry.getFirstCoordinate();
+  map.getView().setCenter(startingPoint);
 });
 
 const vectorLayer = new VectorLayer({
@@ -107,17 +119,17 @@ const map = new Map({
   ],
   target: 'map',
   view: new View({
-    
-    zoom: 9,
+
+    zoom: 10,
   }),
 });
 // zobrazenie mapy na začiatku otvorenia webu na použivatelovu lokalitu
-navigator.geolocation.getCurrentPosition(function(position) {
+navigator.geolocation.getCurrentPosition(function (position) {
   // Convert the user's location to EPSG:3857
   const center = fromLonLat([position.coords.longitude, position.coords.latitude]);
   // Center the map on the user's location
   map.getView().setCenter(center);
-}, function() {
+}, function () {
   // If location could not be determined, center the map on default location
   map.getView().setCenter(fromLonLat([21.245309835613693, 48.73050802516627]));
 });
@@ -142,8 +154,11 @@ const displaySnap = function (coordinate) {
     }
     const seconds = new Date(closestPoint[2] * 1000);
     const date = extractDate(reader.result); // Call extractDate function with file content
+    const imgSrc = './img/pilot_icon.png'; // Replace with the actual path to the image
     info.innerHTML =
-      closestFeature.get('PLT') + ' (' + date.toDateString()+ ')' + ' ' + seconds.toTimeString();
+      '<img src="' + imgSrc + '" alt="Image1" style="vertical-align: middle; width: 30px; height: 30px;"> ' +
+      closestFeature.get('PLT') + ' (' + date.toDateString() + ')' + ' ' + seconds.toTimeString();
+
     const coordinates = [coordinate, [closestPoint[0], closestPoint[1]]];
     if (line === null) {
       line = new LineString(coordinates);
@@ -177,7 +192,7 @@ const style = new Style({
   image: new CircleStyle({
     radius: 6,
     fill: new Fill({
-      color:'red'
+      color: 'red'
     }),
     stroke: stroke,
   }),
@@ -207,7 +222,7 @@ const featureOverlay = new VectorLayer({
   }),
 });
 
-
+// animácia letu
 const control = document.getElementById('time');
 control.addEventListener('input', function () {
   const value = parseInt(control.value, 10) / 100;
@@ -226,13 +241,15 @@ control.addEventListener('input', function () {
   });
   map.render();
 });
+
+//tlačidlo na automatickú animáciu letu
 const playButton = document.getElementById("play-button");
-playButton.addEventListener("click", function(){
+playButton.addEventListener("click", function () {
   const numSteps = 400;
   const step = time.duration / numSteps; // smaller duration for smoother animation
   let i = 0;
   let lastStep = 0;
-  const animate = function(timestamp) {
+  const animate = function (timestamp) {
     const progress = Math.min((timestamp - start) / (step * 1000), 1);
     control.value = progress * 100;
     const m = time.start + time.duration * progress;
@@ -247,9 +264,16 @@ playButton.addEventListener("click", function(){
       } else {
         highlight.getGeometry().setCoordinates(coordinate);
       }
+
+      // Update the info div with the current timestamp
+      const seconds = new Date(coordinate[2] * 1000);
+      const date = extractDate(reader.result);
+      const info = document.getElementById('info');
+      info.innerHTML =
+        feature.get('PLT') + ' (' + date.toDateString() + ')' + ' ' + seconds.toTimeString();
     });
     // update the map only every n steps
-    if (i % Math.floor(numSteps/100) === 0 || progress === 1) {
+    if (i % Math.floor(numSteps / 100) === 0 || progress === 1) {
       map.render();
     }
     if (progress < 1) {
@@ -260,6 +284,7 @@ playButton.addEventListener("click", function(){
   const start = performance.now();
   requestAnimationFrame(animate);
 });
+
 
 
 
@@ -280,7 +305,8 @@ let duration;
 let gliderName;
 
 //add event listener for file input
-fileInput.addEventListener("change", function(){
+//add event listener for file input
+fileInput.addEventListener("change", function () {
   const file = fileInput.files[0];
   reader.onload = function () {
     const data = reader.result;
@@ -288,20 +314,32 @@ fileInput.addEventListener("change", function(){
       featureProjection: 'EPSG:3857',
     });
     vectorSource.addFeatures(features);
-    pilotName = features[0].get('PLT');
-    gliderName = features[0].get('GTY');
-    duration = toTimeString(time.duration);
-    const table = document.getElementById("flight-table");
-    const row = table.insertRow();
-    const pilotCell = row.insertCell(0);
-    const gliderCell = row.insertCell(1);
-    const durationCell = row.insertCell(2);
-    pilotCell.innerHTML = pilotName;
-    gliderCell.innerHTML = gliderName;
-    durationCell.innerHTML = duration + "h";
+
+    features.forEach(function (feature) {
+      const pilotName = feature.get('PLT');
+      const gliderName = feature.get('GTY');
+      const startTime = feature.getGeometry().getFirstCoordinate()[2];
+      const stopTime = feature.getGeometry().getLastCoordinate()[2];
+      const durationSeconds = stopTime - startTime;
+      const durationHours = Math.floor(durationSeconds / 3600);
+      const durationMinutes = Math.floor((durationSeconds % 3600) / 60);
+      const durationString = durationHours.toString().padStart(2, '0') + ':' + durationMinutes.toString().padStart(2, '0') + ':' + (durationSeconds % 60).toString().padStart(2, '0');
+
+      const table = document.getElementById("flight-table");
+      const row = table.insertRow();
+      const pilotCell = row.insertCell(0);
+      const gliderCell = row.insertCell(1);
+      const durationCell = row.insertCell(2);
+      pilotCell.innerHTML = pilotName;
+      gliderCell.innerHTML = gliderName;
+      durationCell.innerHTML = durationString;
+    });
+
+
   };
-  
+
 });
+
 
 // NEW
 function extractDate(igcFile) {
@@ -309,7 +347,7 @@ function extractDate(igcFile) {
   // var dateRecord = igcFile.match(/H[FO]DTE([\d]{2})([\d]{2})([\d]{2})/);
   var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
   if (dateRecord === null) {
-      throw new IGCException('The file does not contain a date header.');
+    throw new IGCException('The file does not contain a date header.');
   }
 
   var day = parseInt(dateRecord[1], 10);
@@ -320,27 +358,57 @@ function extractDate(igcFile) {
   var year = parseInt(dateRecord[3], 10);
 
   if (year < 80) {
-      year += 2000;
+    year += 2000;
   } else {
-      year += 1900;
+    year += 1900;
   }
   return new Date(Date.UTC(year, month, day));
 }
 function parseLatLong(latLongString) {
   var latitude = parseFloat(latLongString.substring(0, 2)) +
-      parseFloat(latLongString.substring(2, 7)) / 60000.0;
+    parseFloat(latLongString.substring(2, 7)) / 60000.0;
   if (latLongString.charAt(7) === 'S') {
-      latitude = -latitude;
+    latitude = -latitude;
   }
 
   var longitude = parseFloat(latLongString.substring(8, 11)) +
-      parseFloat(latLongString.substring(11, 16)) / 60000.0;
+    parseFloat(latLongString.substring(11, 16)) / 60000.0;
   if (latLongString.charAt(16) === 'W') {
-      longitude = -longitude;
+    longitude = -longitude;
   }
 
   return [latitude, longitude];
 }
+
+
+
+//NAVBAR
+const hamburger = document.querySelector('.header .nav-bar .nav-list .hamburger');
+const mobile_menu = document.querySelector('.header .nav-bar .nav-list ul');
+const menu_item = document.querySelectorAll('.header .nav-bar .nav-list ul li a');
+
+
+hamburger.addEventListener('click', () => {
+	hamburger.classList.toggle('active');
+	mobile_menu.classList.toggle('active');
+});
+
+
+
+menu_item.forEach((item) => {
+	item.addEventListener('click', () => {
+		hamburger.classList.toggle('active');
+		mobile_menu.classList.toggle('active');
+	});
+});
+
+
+
+
+
+
+
+
 
 
 

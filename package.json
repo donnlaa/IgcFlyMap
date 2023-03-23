@@ -3,6 +3,7 @@
   "dependencies": {
     "cesium": "^1.102.0",
     "igc-parser": "^1.1.0",
+    "jspdf": "^2.5.1",
     "ol": "7.1.0",
     "openlayers": "^3.17.1"
   },

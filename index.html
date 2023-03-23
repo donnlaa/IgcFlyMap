@@ -29,8 +29,9 @@
           </div>
           <ul>
             <li><a href="./index.html" data-after="Mapa">2D</a></li>
-            <li><a href="./zaznam.html" data-after="Vložiť záznam">Vložiť záznam</a></li>
+            <li><a href="./zaznam.html" data-after="Vložiť záznam">Import igc</a></li>
             <li><a href="./testhtml.html" data-after="3D zobrazenie">3D</a></li>
+            <li><a href="./about.html" data-after="About">About</a></li>
             <button id="language-switcher_en">🇬🇧<strong>ENG</strong></button>
         <button id="language-switcher_sk">🇸🇰<strong>SK</strong></button>
           </ul>
@@ -46,23 +47,25 @@
         <div id="map" class="map"></div>
         <input id="time" type="range" value="0" steps="1" />
         <div id="info">&nbsp;</div>
-        <button id="play-button">Play</button>
+        <button id="import-button">Import</button>
+  <input id="file-input" type="file" style="display:none">
+        <button id="play-button">Play animation</button>
+        
 
       </div>
       <div id="containertab">
-        <button id="import-button">Vložiť</button>
         <table id="flight-table">
           <tr>
             <th>Pilot</th>
             <th>Glider</th>
-            <th>Dĺžka letu</th>
+            <th>Flight duration</th>
             <th>km</th>
           </tr>
         </table>
       </div>
     </div>
   </div>
-  <table id="table"></table>
+  
 
     <!-- Footer -->
     <section id="footer">
@@ -77,7 +80,6 @@
       </div>
     </section>
     <!-- End Footer -->
-   
     <script src="https://unpkg.com/elm-pep@1.0.6/dist/elm-pep.js"></script>
     <script type="module" src="/main.js"></script>
     
