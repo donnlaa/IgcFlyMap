@@ -8,6 +8,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         nested: resolve(__dirname, 'testhtml.html'),
+        about: resolve(__dirname, 'about.html'),
         
       },
     },

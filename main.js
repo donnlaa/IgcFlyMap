@@ -12,38 +12,60 @@ import { fromLonLat } from 'ol/proj';
 
 
 
+
+
+
 const colors = {
   'Marek Kováč': 'rgba(0, 0, 255, 0.7)',
   'Ryland Jordan': 'rgba(254, 0, 0, 0.8)',
 };
 
 const styleCache = {};
+
 const styleFunction = function (feature) {
   const pilotName = feature.get('PLT');
-  let style = styleCache[pilotName];
-  if (!style) {
-    const color = getRandomColor();
-    style = new Style({
-      stroke: new Stroke({
-        color: color,
-        width: 3,
-      }),
+  let styles = styleCache[pilotName];
+
+  if (!styles) {
+    const color = 'black';
+    // Or a random color function
+    const stroke1 = new Stroke({
+      color: color,
+      width: 5,
     });
-    styleCache[pilotName] = style;
+
+    const stroke2 = new Stroke({
+      color: 'rgb(230, 108, 32)', // White with 50% transparency
+      width: 3,
+    });
+
+    styles = [
+      new Style({
+        stroke: stroke1,
+      }),
+      new Style({
+        stroke: stroke2,
+      }),
+    ];
+
+    styleCache[pilotName] = styles;
   }
-  return style;
+
+  return styles;
 };
 
 
 
+
 function getRandomColor() {
-  const letters = '0123456789ABCDEF';
-  let color = '#';
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
+  const min = 64;
+  const max = 255;
+  const r = Math.floor(Math.random() * (max - min + 1) + min);
+  const g = Math.floor(Math.random() * (max - min + 1) + min);
+  const b = Math.floor(Math.random() * (max - min + 1) + min);
+  return `rgb(${r},${g},${b})`;
 }
+
 
 
 const vectorSource = new VectorSource();
@@ -389,18 +411,58 @@ const menu_item = document.querySelectorAll('.header .nav-bar .nav-list ul li a'
 
 
 hamburger.addEventListener('click', () => {
-	hamburger.classList.toggle('active');
-	mobile_menu.classList.toggle('active');
+  hamburger.classList.toggle('active');
+  mobile_menu.classList.toggle('active');
 });
 
 
 
 menu_item.forEach((item) => {
-	item.addEventListener('click', () => {
-		hamburger.classList.toggle('active');
-		mobile_menu.classList.toggle('active');
-	});
+  item.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    mobile_menu.classList.toggle('active');
+  });
 });
+
+function findCanvas(element) {
+  if (element.tagName === 'CANVAS') {
+    return element;
+  }
+
+  for (let i = 0; i < element.children.length; i++) {
+    const canvas = findCanvas(element.children[i]);
+    if (canvas) {
+      return canvas;
+    }
+  }
+
+  return null;
+}
+
+function saveMapAsImage() {
+  map.once('rendercomplete', function (event) {
+    const canvas = findCanvas(map.getViewport());
+
+    if (canvas && canvas.toDataURL) {
+      const dataURL = canvas.toDataURL();
+      if (navigator.msSaveBlob) {
+        // For IE and Edge
+        navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
+      } else {
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = 'map.png';
+        link.click();
+      }
+    }
+  });
+
+  // Trigger rendercomplete event by calling renderSync
+  map.renderSync();
+}
+
+// Add an event listener to the button with the "savemap" ID
+document.getElementById('savemap').addEventListener('click', saveMapAsImage);
 
 
 

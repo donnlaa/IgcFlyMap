@@ -16,8 +16,8 @@
             <div class="nav-bar">
                 <div class="brand">
                     <a href="./index.html">
-                        <h1>IgcToPdfOffline</h1>
-                    </a>
+                        <h1><span>Igc</span><span class="span2"></span>To<span>Pdf</span>Offline<img src="./img/icon_logo.png" class="logo_icon" alt="logo"></h1>
+                      </a>
                 </div>
                 <div class="nav-list">
                     <div class="hamburger">
@@ -27,7 +27,7 @@
                         <li><a href="./index.html" data-after="Mapa">2D</a></li>
                         <li><a href="./zaznam.html" data-after="Vložiť záznam">Import igc</a></li>
                         <li><a href="./testhtml.html" data-after="3D zobrazenie">3D</a></li>
-                        <li><a href="./testhtml.html" data-after="About">About</a></li>
+                        <li><a href="./about.html" data-after="About">About</a></li>
                         <button id="language-switcher_en">🇬🇧<strong>ENG</strong></button>
                         <button id="language-switcher_sk">🇸🇰<strong>SK</strong></button>
                     </ul>
@@ -37,19 +37,21 @@
     </section>
     <!-- End Header -->
     <div class="container3D">
-        <h1>Parse IGC File</h1>
         <div id="cesiumContainer"></div>
         <div id="loading">
             <div class="spinner"></div>
             <div>Loading your flight</div>
         </div>
+        <div id="pilot-name" class="pilot-name"></div>
+        <div id="pilot-name"></div>
+
 
         <div>
             <input type="file" id="file-input" style="display:none;">
-            <label for="file-input" id="play-button">1. Choose a file</label>
+            <label for="file-input" id="play-button" style="padding: 8px 20px; position: relative;">1. Choose a file</label>
           
           
-        <button id="play-button" onclick="parseFile(); changeId();">2. Show track</button>
+        <button id="play-button" onclick="parseFile(); changeId();" style=" position: relative;">2. Show track</button>
     </div>
         <!-- <button onclick="showTrack()">track</button>
         <button id="playButton">play</button> -->
@@ -230,13 +232,6 @@
         }
 
         function parsePosition(positionRecord, model, flightDate) {
-            // Regex to match position records:
-            // Hours, minutes, seconds, latitude, N or S, longitude, E or W,
-            // Fix validity ('A' = 3D fix, 'V' = 2D or no fix),
-            // pressure altitude, GPS altitude.
-            // Latitude and longitude are in degrees and minutes, with the minutes
-            // value multiplied by 1000 so that no decimal point is needed.
-            //                      hours    minutes  seconds  latitude    longitude        press alt  gps alt
             var positionRegex = /^B([\d]{2})([\d]{2})([\d]{2})([\d]{7}[NS][\d]{8}[EW])([AV])([-\d][\d]{4})([-\d][\d]{4})/;
             var positionMatch = positionRecord.match(positionRegex);
             if (positionMatch) {
@@ -340,27 +335,58 @@
 
     }
     function showTrack(parsedFlight) {
-        var positions = parsedFlight.latLong.map((latLong, index) => {
-            var altitude = parsedFlight.gpsAltitude[index];
-            return Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
-        });
+    var positions = parsedFlight.latLong.map((latLong, index) => {
+        var altitude = parsedFlight.gpsAltitude[index];
+        return Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
+    });
 
-        var track = viewer.entities.add({
-            polyline: {
-                positions: positions,
-                width: 3,
-                material: Cesium.Color.BLUE
-            }
-        });
+    // Add the polyline
+    var polyline = viewer.entities.add({
+        polyline: {
+            positions: positions,
+            width: 3,
+            material: Cesium.Color.BLUE,
+        },
+    });
 
-        console.log("all good");
+    // Add the point at the start of the track
+    var startPoint = viewer.entities.add({
+        position: positions[0],
+        point: {
+            pixelSize: 10,
+            color: Cesium.Color.YELLOW,
+        },
+    });
 
+    var endPoint = viewer.entities.add({
+        position: positions[positions.length - 1],
+        point: {
+            pixelSize: 10,
+            color: Cesium.Color.RED,
+        },
+    });
 
-        viewer.zoomTo(track).then(function () {
-            removeLoading();
-        });
-
+    // track a koncove body
+    var track = {
+        polyline: polyline,
+        startPoint: startPoint,
+        endPoint: endPoint,
+    };
+    var pilotName = parsedFlight.headers.find(header => header.name === "Pilot");
+    var gliderName = parsedFlight.headers.find(header => header.name === "Glider type"); 
+    if (pilotName && gliderName) { 
+        document.getElementById("pilot-name").innerText = "Pilot: " + pilotName.value + "\nGlider: " + gliderName.value;
+        
     }
+    console.log("all good");
+    console.log("Flight headers:", parsedFlight.headers);
+
+    // priblizenie na track
+    viewer.zoomTo([track.polyline, track.startPoint, track.endPoint]).then(function () {
+        removeLoading();
+    });
+}
+
 </script>
 
 </html>

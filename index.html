@@ -5,12 +5,13 @@
     <title>IgcToPdfOffline</title>
     <link rel="stylesheet" href="node_modules/ol/ol.css">
     <link rel="stylesheet" href="./style2.css">
+    <script src="https://kit.fontawesome.com/7e2e637b3b.js" crossorigin="anonymous"></script>
   </head>
   <style>
     .map {
       width: 100%;
       height: 600px;
-      border: rgb(172, 172, 172) 2px solid;
+      border: #606c7b 2px solid;
       }
   </style>
   <body>
@@ -20,7 +21,7 @@
       <div class="nav-bar">
         <div class="brand">
           <a href="./index.html">
-            <h1>IgcToPdfOffline</h1>
+            <h1><span>Igc</span><span class="span2"></span>To<span>Pdf</span>Offline<img src="./img/icon_logo.png" class="logo_icon" alt="logo"></h1>
           </a>
         </div>
         <div class="nav-list">
@@ -47,9 +48,11 @@
         <div id="map" class="map"></div>
         <input id="time" type="range" value="0" steps="1" />
         <div id="info">&nbsp;</div>
-        <button id="import-button">Import</button>
+        <button id="import-button"><i class="fa fa-upload"></i> Import</button>
   <input id="file-input" type="file" style="display:none">
-        <button id="play-button">Play animation</button>
+        <button id="play-button"><i class="fa fa-play"></i> Play animation</button>
+        <button id="savemap"><i class="fa fa-download"></i></i> Save Map</button>
+        
         
 
       </div>
@@ -62,7 +65,12 @@
             <th>km</th>
           </tr>
         </table>
+        <div class="chart-container">
+          <canvas id="altitude-chart"></canvas>
+        </div>
+        
       </div>
+      
     </div>
   </div>
   
@@ -73,7 +81,7 @@
         <div class="brand">
           <h1>IgcToPdfOffline</h1>
         </div>
-        <h2>Zobrazte dáta letu ľahko a jednoducho</h2>
+        <h2>Display flight data easily and simply</h2>
         <p>Copyright © 2023 IgcToPdfOffline</p>
         
 
