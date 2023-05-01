@@ -3,10 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Parse IGC File</title>
-    
+    <title>IgcToPdfMapper</title>
+
     <link href="https://unpkg.com/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <link rel="stylesheet" href="./style2.css">
+    <script src="https://kit.fontawesome.com/7e2e637b3b.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
@@ -16,8 +18,9 @@
             <div class="nav-bar">
                 <div class="brand">
                     <a href="./index.html">
-                        <h1><span>Igc</span><span class="span2"></span>To<span>Pdf</span>Offline<img src="./img/icon_logo.png" class="logo_icon" alt="logo"></h1>
-                      </a>
+                        <h1><span>Igc</span><span class="span2"></span>To<span>Pdf</span>Mapper<img
+                                src="./img/icon_logo.png" class="logo_icon" alt="logo"></h1>
+                    </a>
                 </div>
                 <div class="nav-list">
                     <div class="hamburger">
@@ -48,25 +51,36 @@
 
         <div>
             <input type="file" id="file-input" style="display:none;">
-            <label for="file-input" id="play-button" style="padding: 8px 20px; position: relative;">1. Choose a file</label>
-          
-          
-        <button id="play-button" onclick="parseFile(); changeId();" style=" position: relative;">2. Show track</button>
+            <label for="file-input" id="play-button" class="tlacidlo" style="padding: 8px 20px; position: relative;">1.
+                Choose a
+                file</label>
+
+
+            <button class="tlacidlo" id="play-button" onclick="parseFile(); changeId();" style=" position: relative;">2.
+                Show
+                track</button>
+            <button class="savemap" id="play-animation"><i class="fa fa-play"></i> Play Animation</button>
+
+
+        </div>
     </div>
-        <!-- <button onclick="showTrack()">track</button>
-        <button id="playButton">play</button> -->
+    <div class="containerGraph">
+        <canvas id="altitudeGraph"></canvas>
     </div>
     <script src="https://unpkg.com/cesium/Build/Cesium/Cesium.js"></script>
 </body>
 <script>
 
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNWRhMmYzMi03NzJmLTQzMWQtOTBjNC0xNDExZGVhOWRlZGEiLCJpZCI6MTI2MTY1LCJpYXQiOjE2NzcyMzgwMjV9.zVLhACU4c_P9pOaoDOOTPxb1ywhgiIL_rPS9SL54e8w';
-    
+
     var viewer = new Cesium.Viewer('cesiumContainer', {
         infoBox: false,
+        timeline: false,
+        animation: false,
     });
-    
+
     viewer.terrainProvider = Cesium.createWorldTerrain();
+
     // Create an array of positions from latLong data
 
     function changeId() {
@@ -98,11 +112,19 @@
                 console.log(parsedFlight);
 
                 showTrack(parsedFlight);
+                renderAltitudeGraph(parsedFlight);
                 console.log(parsedFlight.latLong);
+
+                // Update the button's onclick attribute to pass the parsedFlight object
+                document.getElementById('play-animation').onclick = function () {
+                    playAnimation(parsedFlight);
+                };
+
             } catch (error) {
                 console.log(error);
             }
         };
+
 
         reader.onerror = function (e) {
             console.log(e);
@@ -334,58 +356,136 @@
         return model;
 
     }
+
+
     function showTrack(parsedFlight) {
-    var positions = parsedFlight.latLong.map((latLong, index) => {
-        var altitude = parsedFlight.gpsAltitude[index];
-        return Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
-    });
+        var positions = parsedFlight.latLong.map((latLong, index) => {
+            var altitude = parsedFlight.gpsAltitude[index];
+            return Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
+        });
 
-    // Add the polyline
-    var polyline = viewer.entities.add({
-        polyline: {
-            positions: positions,
-            width: 3,
-            material: Cesium.Color.BLUE,
-        },
-    });
+        // Add the polyline
+        var polyline = viewer.entities.add({
+            polyline: {
+                positions: positions,
+                width: 3,
+                material: Cesium.Color.fromCssColorString('rgb(230, 108, 32)'),
+            },
+        });
 
-    // Add the point at the start of the track
-    var startPoint = viewer.entities.add({
-        position: positions[0],
-        point: {
-            pixelSize: 10,
-            color: Cesium.Color.YELLOW,
-        },
-    });
 
-    var endPoint = viewer.entities.add({
-        position: positions[positions.length - 1],
-        point: {
-            pixelSize: 10,
-            color: Cesium.Color.RED,
-        },
-    });
+        // Add the point at the start of the track
+        var startPoint = viewer.entities.add({
+            position: positions[0],
+            point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW,
+            },
+        });
 
-    // track a koncove body
-    var track = {
-        polyline: polyline,
-        startPoint: startPoint,
-        endPoint: endPoint,
-    };
-    var pilotName = parsedFlight.headers.find(header => header.name === "Pilot");
-    var gliderName = parsedFlight.headers.find(header => header.name === "Glider type"); 
-    if (pilotName && gliderName) { 
-        document.getElementById("pilot-name").innerText = "Pilot: " + pilotName.value + "\nGlider: " + gliderName.value;
-        
+        var endPoint = viewer.entities.add({
+            position: positions[positions.length - 1],
+            point: {
+                pixelSize: 10,
+                color: Cesium.Color.RED,
+            },
+        });
+
+        // track a koncove body
+        var track = {
+            polyline: polyline,
+            startPoint: startPoint,
+            endPoint: endPoint,
+        };
+        var pilotName = parsedFlight.headers.find(header => header.name === "Pilot");
+        var gliderName = parsedFlight.headers.find(header => header.name === "Glider type");
+        if (pilotName && gliderName) {
+            document.getElementById("pilot-name").innerText = "Pilot: " + pilotName.value + "\nGlider: " + gliderName.value;
+
+        }
+        console.log("all good");
+        console.log("Flight headers:", parsedFlight.headers);
+
+        // priblizenie na track
+        viewer.zoomTo([track.polyline, track.startPoint, track.endPoint]).then(function () {
+            removeLoading();
+        });
     }
-    console.log("all good");
-    console.log("Flight headers:", parsedFlight.headers);
 
-    // priblizenie na track
-    viewer.zoomTo([track.polyline, track.startPoint, track.endPoint]).then(function () {
-        removeLoading();
-    });
-}
+    //graf
+    function renderAltitudeGraph(parsedFlight) {
+        const altitudeCanvas = document.getElementById('altitudeGraph');
+        altitudeCanvas.style.backgroundColor = '#29323c'; // Light Grey background color
+
+        const altitudeData = parsedFlight.gpsAltitude;
+        const timeData = parsedFlight.recordTime.map(time => time.toISOString().substr(11, 8));
+
+        new Chart(altitudeCanvas, {
+            type: 'line',
+            data: {
+                labels: timeData,
+                datasets: [
+                    {
+                        label: 'Altitude',
+                        data: altitudeData,
+                        borderColor: 'rgb(230, 108, 32)', // Orange
+                        backgroundColor: 'rgba(230, 108, 32, 0.1)', // Orange with transparency
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Time',
+                        },
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Altitude (m)',
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    // animacia
+    function playAnimation(parsedFlight) {
+        var flightPath = parsedFlight.latLong;
+        var totalPositions = flightPath.length;
+        var animationDuration = 10000; // 10 seconds
+        var interval = animationDuration / totalPositions;
+
+        var movingDot = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(flightPath[0][1], flightPath[0][0], parsedFlight.gpsAltitude[0]),
+            point: {
+                pixelSize: 11,
+                color: Cesium.Color.WHITE,
+            },
+        });
+
+        var currentPositionIndex = 0;
+
+        function updateDotPosition() {
+            if (currentPositionIndex >= totalPositions) {
+                clearInterval(animationInterval);
+                return;
+            }
+
+            var latLong = flightPath[currentPositionIndex];
+            var altitude = parsedFlight.gpsAltitude[currentPositionIndex];
+            movingDot.position = Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
+            currentPositionIndex++;
+        }
+
+        var animationInterval = setInterval(updateDotPosition, interval);
+    }
 
 </script>
 

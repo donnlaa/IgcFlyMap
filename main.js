@@ -10,11 +10,6 @@ import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { getVectorContext } from 'ol/render';
 import { fromLonLat } from 'ol/proj';
 
-
-
-
-
-
 const colors = {
   'Marek Kováč': 'rgba(0, 0, 255, 0.7)',
   'Ryland Jordan': 'rgba(254, 0, 0, 0.8)',
@@ -54,9 +49,6 @@ const styleFunction = function (feature) {
   return styles;
 };
 
-
-
-
 function getRandomColor() {
   const min = 64;
   const max = 255;
@@ -65,8 +57,6 @@ function getRandomColor() {
   const b = Math.floor(Math.random() * (max - min + 1) + min);
   return `rgb(${r},${g},${b})`;
 }
-
-
 
 const vectorSource = new VectorSource();
 
@@ -98,8 +88,7 @@ fileInput.addEventListener("change", function () {
 });
 
 const igcFormat = new IGC();
-// importButton.setAttribute("id", "import-button");
-// document.body.appendChild(importButton);
+
 const time = {
   start: Infinity,
   stop: -Infinity,
@@ -123,7 +112,6 @@ const vectorLayer = new VectorLayer({
 });
 
 // vytvorenie mapy
-
 const map = new Map({
   layers: [
     new TileLayer({
@@ -190,7 +178,6 @@ const displaySnap = function (coordinate) {
   }
   map.render();
 };
-
 
 map.on('pointermove', function (evt) {
   if (evt.dragging) {
@@ -263,57 +250,64 @@ control.addEventListener('input', function () {
   });
   map.render();
 });
-
 //tlačidlo na automatickú animáciu letu
 const playButton = document.getElementById("play-button");
+let isPlaying = false;
+let start;
+let lastStep = 0;
+let animationFrameId;
+
 playButton.addEventListener("click", function () {
+  if (!isPlaying) {
+    playButton.textContent = "Pause Animation";
+    isPlaying = true;
+    start = performance.now() - lastStep;
+    animate();
+  } else {
+    playButton.textContent = "Play Animation";
+    isPlaying = false;
+    lastStep = performance.now() - start;
+    cancelAnimationFrame(animationFrameId);
+  }
+});
+
+function animate() {
   const numSteps = 400;
-  const step = time.duration / numSteps; // smaller duration for smoother animation
+  const step = time.duration / numSteps;
   let i = 0;
-  let lastStep = 0;
-  const animate = function (timestamp) {
+  const animateStep = function (timestamp) {
     const progress = Math.min((timestamp - start) / (step * 1000), 1);
     control.value = progress * 100;
     const m = time.start + time.duration * progress;
     vectorSource.forEachFeature(function (feature) {
       const geometry = feature.getGeometry();
       const coordinate = geometry.getCoordinateAtM(m, true);
-      let highlight = feature.get('highlight');
+      let highlight = feature.get("highlight");
       if (highlight === undefined) {
         highlight = new Feature(new Point(coordinate));
-        feature.set('highlight', highlight);
+        feature.set("highlight", highlight);
         featureOverlay.getSource().addFeature(highlight);
       } else {
         highlight.getGeometry().setCoordinates(coordinate);
       }
-
-      // Update the info div with the current timestamp
       const seconds = new Date(coordinate[2] * 1000);
       const date = extractDate(reader.result);
-      const info = document.getElementById('info');
-      info.innerHTML =
-        feature.get('PLT') + ' (' + date.toDateString() + ')' + ' ' + seconds.toTimeString();
+      const info = document.getElementById("info");
+      info.innerHTML = feature.get("PLT") + " (" + date.toDateString() + ") " + seconds.toTimeString();
     });
-    // update the map only every n steps
     if (i % Math.floor(numSteps / 100) === 0 || progress === 1) {
       map.render();
     }
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    }
     i++;
+    if (progress < 1 && isPlaying) {
+      animationFrameId = requestAnimationFrame(animateStep);
+    } else {
+      lastStep = performance.now() - start;
+      isPlaying = false;
+    }
   };
-  const start = performance.now();
-  requestAnimationFrame(animate);
-});
-
-
-
-
-
-
-
-
+  animationFrameId = requestAnimationFrame(animateStep);
+}
 // text pod mapou co pise informacie o lete... 
 function toTimeString(totalSeconds) { // funkcia na premenu sekund na normalny format casu
   const totalMs = totalSeconds * 1000;
@@ -322,9 +316,6 @@ function toTimeString(totalSeconds) { // funkcia na premenu sekund na normalny f
   return result;
 }
 // NIZSIE JE ZAS KOD PRE TABULKU VYPIS
-let pilotName;
-let duration;
-let gliderName;
 
 //add event listener for file input
 //add event listener for file input
@@ -361,9 +352,6 @@ fileInput.addEventListener("change", function () {
   };
 
 });
-
-
-// NEW
 function extractDate(igcFile) {
   // Date is recorded as: HFDTEddmmyy (where HFDTE is a literal and dddmmyy are digits).
   // var dateRecord = igcFile.match(/H[FO]DTE([\d]{2})([\d]{2})([\d]{2})/);
@@ -401,8 +389,6 @@ function parseLatLong(latLongString) {
 
   return [latitude, longitude];
 }
-
-
 
 //NAVBAR
 const hamburger = document.querySelector('.header .nav-bar .nav-list .hamburger');
