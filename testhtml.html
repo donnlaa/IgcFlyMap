@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>IgcToPdfMapper</title>
+    <title>IgcFlyMap</title>
 
     <link href="https://unpkg.com/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <link rel="stylesheet" href="./style2.css">
@@ -18,7 +18,7 @@
             <div class="nav-bar">
                 <div class="brand">
                     <a href="./index.html">
-                        <h1><span>Igc</span><span class="span2"></span>To<span>Pdf</span>Mapper<img
+                        <h1><span>Igc</span><span class="span2"></span>Fly<span>Map</span><img
                                 src="./img/icon_logo.png" class="logo_icon" alt="logo"></h1>
                     </a>
                 </div>
@@ -50,15 +50,14 @@
 
 
         <div>
-            <input type="file" id="file-input" style="display:none;">
+            <input type="file" id="file-input" onchange="parseFile(); changeId();" style="display:none;">
             <label for="file-input" id="play-button" class="tlacidlo" style="padding: 8px 20px; position: relative;">1.
-                Choose a
-                file</label>
+                Import file</label>
 
 
-            <button class="tlacidlo" id="play-button" onclick="parseFile(); changeId();" style=" position: relative;">2.
-                Show
-                track</button>
+
+            <button class="tlacidlo" id="play-button" onclick="return false;" style=" position: relative;">
+                You need igc</button>
             <button class="savemap" id="play-animation"><i class="fa fa-play"></i> Play Animation</button>
 
 
@@ -81,7 +80,7 @@
 
     viewer.terrainProvider = Cesium.createWorldTerrain();
 
-    // Create an array of positions from latLong data
+// pozicie z lat a long
 
     function changeId() {
         document.getElementById("loading").id = "loadingNone";
@@ -90,8 +89,7 @@
         document.getElementById("loadingNone").id = "loading";
     }
 
-    // Constructor for an exception which is thrown if the file
-    // being parsed is not in a valid IGC format.
+    // zly format suboru
     function IGCException(message) {
         'use strict';
 
@@ -115,7 +113,7 @@
                 renderAltitudeGraph(parsedFlight);
                 console.log(parsedFlight.latLong);
 
-                // Update the button's onclick attribute to pass the parsedFlight object
+
                 document.getElementById('play-animation').onclick = function () {
                     playAnimation(parsedFlight);
                 };
@@ -134,13 +132,10 @@
 
 
     }
-    // Parses an IGC logger file.
     function parseIGC(igcFile) {
         'use strict';
 
-        // Looks up the manufacturer name corresponding to
-        // the three letter code in the first line of the IGC file
-        // (the 'A' record).
+
         function parseManufacturer(aRecord) {
             var manufacturers = {
                 'GCS': 'Garrecht',
@@ -178,20 +173,14 @@
             return manufacturerInfo;
         }
 
-        // Extracts the flight date from the IGC file.
         function extractDate(igcFile) {
-            // Date is recorded as: HFDTEddmmyy (where HFDTE is a literal and dddmmyy are digits).
-            // var dateRecord = igcFile.match(/H[FO]DTE([\d]{2})([\d]{2})([\d]{2})/);
             var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
             if (dateRecord === null) {
                 throw new IGCException('The file does not contain a date header.');
             }
 
             var day = parseInt(dateRecord[1], 10);
-            // Javascript numbers months from zero, not 1!
             var month = parseInt(dateRecord[2], 10) - 1;
-            // The IGC specification has a built-in Millennium Bug (2-digit year).
-            // I will arbitrarily assume that any year before "80" is in the 21st century.
             var year = parseInt(dateRecord[3], 10);
 
             if (year < 80) {
@@ -234,9 +223,7 @@
             }
         }
 
-        // Parses a latitude and longitude in the form:
-        // DDMMmmmNDDDMMmmmE
-        // where M = minutes and m = decimal places of minutes.
+  
         function parseLatLong(latLongString) {
             var latitude = parseFloat(latLongString.substring(0, 2)) +
                 parseFloat(latLongString.substring(2, 7)) / 60000.0;
@@ -257,12 +244,10 @@
             var positionRegex = /^B([\d]{2})([\d]{2})([\d]{2})([\d]{7}[NS][\d]{8}[EW])([AV])([-\d][\d]{4})([-\d][\d]{4})/;
             var positionMatch = positionRecord.match(positionRegex);
             if (positionMatch) {
-                // Convert the time to a date and time. Start by making a clone of the date
-                // object that represents the date given in the headers:
+                
                 var positionTime = new Date(flightDate.getTime());
                 positionTime.setUTCHours(parseInt(positionMatch[1], 10), parseInt(positionMatch[2], 10), parseInt(positionMatch[3], 10));
-                // If the flight crosses midnight (UTC) then we now have a time that is 24 hours out.
-                // We know that this is the case if the time is earlier than the first position fix.
+            
                 if (model.recordTime.length > 0 &&
                     model.recordTime[0] > positionTime) {
                     positionTime.setDate(flightDate.getDate() + 1);
@@ -279,17 +264,13 @@
             }
         }
 
-        // ---- Start of IGC parser code ----
-
         var invalidFileMessage = 'This is not IGC file';
         var igcLines = igcFile.split('\n');
         if (igcLines.length < 2) {
             throw new IGCException(invalidFileMessage);
         }
 
-        // Declare the model object that is to be returned;
-        // this contains the position and altitude data and the header
-        // values.
+        
         var model = {
             headers: [],
             recordTime: [],
@@ -299,8 +280,6 @@
             taskpoints: []
         };
 
-        // The first line should begin with 'A' followed by
-        // a 3-character manufacturer Id and a 3-character serial number.
         if (!(/^A[\w]{6}/).test(igcLines[0])) {
             throw new IGCException(invalidFileMessage);
         }
@@ -337,15 +316,14 @@
                     }
                     break;
 
-                case 'C': // Task declaration
+                case 'C':
                     var taskRegex = /^C[\d]{7}[NS][\d]{8}[EW].*/;
                     if (taskRegex.test(currentLine)) {
-                        //drop the "C" and push raw data to model.  Will parse later if needed using same functions as for user entered tasks
                         model.taskpoints.push(currentLine.substring(1).trim());
                     }
                     break;
 
-                case 'H': // Header information
+                case 'H':
                     headerData = parseHeader(currentLine);
                     if (headerData) {
                         model.headers.push(headerData);
@@ -364,7 +342,6 @@
             return Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
         });
 
-        // Add the polyline
         var polyline = viewer.entities.add({
             polyline: {
                 positions: positions,
@@ -374,7 +351,7 @@
         });
 
 
-        // Add the point at the start of the track
+        
         var startPoint = viewer.entities.add({
             position: positions[0],
             point: {
@@ -391,7 +368,7 @@
             },
         });
 
-        // track a koncove body
+        
         var track = {
             polyline: polyline,
             startPoint: startPoint,
@@ -415,7 +392,7 @@
     //graf
     function renderAltitudeGraph(parsedFlight) {
         const altitudeCanvas = document.getElementById('altitudeGraph');
-        altitudeCanvas.style.backgroundColor = '#29323c'; // Light Grey background color
+        altitudeCanvas.style.backgroundColor = '#29323c'; 
 
         const altitudeData = parsedFlight.gpsAltitude;
         const timeData = parsedFlight.recordTime.map(time => time.toISOString().substr(11, 8));
@@ -455,7 +432,7 @@
         });
     }
 
-    // animacia
+    // animacia letu
     function playAnimation(parsedFlight) {
         var flightPath = parsedFlight.latLong;
         var totalPositions = flightPath.length;

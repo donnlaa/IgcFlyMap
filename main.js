@@ -48,7 +48,7 @@ const styleFunction = function (feature) {
 
   return styles;
 };
-
+// funkcia trás random color
 function getRandomColor() {
   const min = 64;
   const max = 255;
@@ -62,7 +62,7 @@ const vectorSource = new VectorSource();
 
 let reader = new FileReader();
 
-//tlacidlo
+//tlacidlo na vlozenie
 const fileInput = document.createElement("input");
 fileInput.setAttribute("type", "file");
 fileInput.setAttribute("multiple", ""); // Add this line to accept multiple files
@@ -353,18 +353,15 @@ fileInput.addEventListener("change", function () {
 
 });
 function extractDate(igcFile) {
-  // Date is recorded as: HFDTEddmmyy (where HFDTE is a literal and dddmmyy are digits).
-  // var dateRecord = igcFile.match(/H[FO]DTE([\d]{2})([\d]{2})([\d]{2})/);
+
   var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
   if (dateRecord === null) {
     throw new IGCException('The file does not contain a date header.');
   }
 
   var day = parseInt(dateRecord[1], 10);
-  // Javascript numbers months from zero, not 1!
   var month = parseInt(dateRecord[2], 10) - 1;
-  // The IGC specification has a built-in Millennium Bug (2-digit year).
-  // I will arbitrarily assume that any year before "80" is in the 21st century.
+
   var year = parseInt(dateRecord[3], 10);
 
   if (year < 80) {
@@ -447,7 +444,7 @@ function saveMapAsImage() {
   map.renderSync();
 }
 
-// Add an event listener to the button with the "savemap" ID
+// event listener na savemap
 document.getElementById('savemap').addEventListener('click', saveMapAsImage);
 
 
