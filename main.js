@@ -4,11 +4,12 @@ import Map from 'ol/Map';
 import OSM, { ATTRIBUTION } from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
 import View from 'ol/View';
-import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from 'ol/style';
 import { LineString, Point } from 'ol/geom';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { getVectorContext } from 'ol/render';
 import { fromLonLat } from 'ol/proj';
+
 
 const colors = {
   'Marek Kováč': 'rgba(0, 0, 255, 0.7)',
@@ -26,12 +27,12 @@ const styleFunction = function (feature) {
     // Or a random color function
     const stroke1 = new Stroke({
       color: color,
-      width: 5,
+      width: 4,
     });
 
     const stroke2 = new Stroke({
       color: 'rgb(230, 108, 32)', // White with 50% transparency
-      width: 3,
+      width: 2,
     });
 
     styles = [
@@ -221,15 +222,16 @@ const featureOverlay = new VectorLayer({
   source: new VectorSource(),
   map: map,
   style: new Style({
-    image: new CircleStyle({
-      radius: 6,
-      fill: new Fill({
-        color: 'red',
-      }),
-      stroke: stroke,
+    image: new Icon({
+      anchor: [0.5, 0.5],
+      anchorXUnits: 'fraction',
+      anchorYUnits: 'fraction',
+      opacity: 1,
+      src: '/img/glider.png' // replace this with the path to your icon image
     }),
   }),
 });
+
 
 // animácia letu
 const control = document.getElementById('time');
@@ -272,7 +274,7 @@ playButton.addEventListener("click", function () {
 });
 
 function animate() {
-  const numSteps = 400;
+  const numSteps = 100;
   const step = time.duration / numSteps;
   let i = 0;
   const animateStep = function (timestamp) {
@@ -447,6 +449,35 @@ function saveMapAsImage() {
 // event listener na savemap
 document.getElementById('savemap').addEventListener('click', saveMapAsImage);
 
+
+// jazyk
+let currentLang = 'sk'; // Default language
+
+switchLanguage(currentLang);
+document.getElementById('language-switcher_en').addEventListener('click', function () {
+  switchLanguage('en');
+});
+
+document.getElementById('language-switcher_sk').addEventListener('click', function () {
+  switchLanguage('sk');
+});
+
+function switchLanguage(lang) {
+  let elements = document.querySelectorAll('[data-lang]');
+  elements.forEach(function (element) {
+    if (element.getAttribute('data-lang') == lang) {
+      element.style.display = 'inline';
+    } else {
+      element.style.display = 'none';
+    }
+  });
+
+  // Switch the href for the about link
+  let aboutLink = document.getElementById('about-link');
+  aboutLink.href = aboutLink.getAttribute('data-lang-href-' + lang);
+
+  currentLang = lang; // Update the current language
+}
 
 
 

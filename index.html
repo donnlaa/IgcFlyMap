@@ -33,10 +33,17 @@
             <div class="bar"></div>
           </div>
           <ul>
-            <li><a href="./index.html" data-after="Mapa">2D</a></li>
-            <li><a href="./zaznam.html" data-after="Vložiť záznam">Vložiť igc</a></li>
+            <li><a href="#" data-after="Mapa">2D</a></li>
             <li><a href="./testhtml.html" data-after="3D zobrazenie">3D</a></li>
-            <li><a href="./about.html" data-after="About">O aplikácii</a></li>
+            <li>
+              <a id="about-link" data-lang-href-en="./about.html" data-lang-href-sk="./aboutsk.html">
+                <span data-lang="en" style="color: inherit;">About</span>
+                <span data-lang="sk" style="color: inherit;">O aplikácii</span>
+              </a>
+            </li>
+
+
+
             <button id="language-switcher_en">🇬🇧<strong>ENG</strong></button>
             <button id="language-switcher_sk">🇸🇰<strong>SK</strong></button>
           </ul>
@@ -52,10 +59,24 @@
         <div id="map" class="map"></div>
         <input id="time" type="range" value="0" steps="1" />
         <div id="info">&nbsp;</div>
-        <button id="import-button"><i class="fa fa-upload"></i> Vložiť súbor</button>
+        <button id="import-button">
+          <i class="fa fa-upload"></i>
+          <span data-lang="en">Import file</span>
+          <span data-lang="sk">Vložiť súbor</span>
+        </button>
         <input id="file-input" type="file" style="display:none">
-        <button id="play-button"><i class="fa fa-play"></i> Animácia letu</button>
-        <button id="savemap"><i class="fa fa-download"></i></i> Uložiť mapu</button>
+        <button id="play-button">
+          <i class="fa fa-play"></i>
+          <span data-lang="en">Animation</span>
+          <span data-lang="sk">Animácia letu</span>
+        </button>
+
+        <button id="savemap">
+          <i class="fa fa-download"></i>
+          <span data-lang="en">Save Map</span>
+          <span data-lang="sk">Uložiť mapu</span>
+        </button>
+
 
 
 
@@ -63,10 +84,11 @@
       <div id="containertab">
         <table id="flight-table">
           <tr>
-            <th>Pilot</th>
-            <th>Glider</th>
-            <th>Flight duration</th>
-            <th>km</th>
+            <th><span data-lang="en">Pilot</span><span data-lang="sk">Pilot</span></th>
+            <th><span data-lang="en">Glider</span><span data-lang="sk">Glider</span></th>
+            <th><span data-lang="en">Flight duration</span><span data-lang="sk">Trvanie letu</span></th>
+            <th><span data-lang="en">km</span><span data-lang="sk">km</span></th>
+
           </tr>
         </table>
 
@@ -82,9 +104,13 @@
   <section id="footer">
     <div class="footer container">
       <div class="brand">
-        <h1>IgcToPdfOffline</h1>
+        <h1>IgcFlyMap</h1>
       </div>
-      <h2>Display flight data easily and simply</h2>
+      <h2>
+        <span data-lang="en">Display flight data easily and simply</span>
+        <span data-lang="sk">Jednoduché a ľahké zobrazenie letových údajov</span>
+      </h2>
+
       <p><b>©2023 KPI FEI TUKE</b></p>
 
 

@@ -4,8 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>IgcFlyMap</title>
-
+    <script src="https://unpkg.com/cesium/Build/Cesium/Cesium.js"></script>
     <link href="https://unpkg.com/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <!-- <script src="/assets/cesium/Build/Cesium/Cesium.js"></script>
+    <link href="/assets/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet"> -->
     <link rel="stylesheet" href="./style2.css">
     <script src="https://kit.fontawesome.com/7e2e637b3b.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
@@ -18,8 +20,8 @@
             <div class="nav-bar">
                 <div class="brand">
                     <a href="./index.html">
-                        <h1><span>Igc</span><span class="span2"></span>Fly<span>Map</span><img
-                                src="./img/icon_logo.png" class="logo_icon" alt="logo"></h1>
+                        <h1><span>Igc</span><span class="span2"></span>Fly<span>Map</span><img src="./img/icon_logo.png"
+                                class="logo_icon" alt="logo"></h1>
                     </a>
                 </div>
                 <div class="nav-list">
@@ -28,9 +30,14 @@
                     </div>
                     <ul>
                         <li><a href="./index.html" data-after="Mapa">2D</a></li>
-                        <li><a href="./zaznam.html" data-after="Vložiť záznam">Import igc</a></li>
                         <li><a href="./testhtml.html" data-after="3D zobrazenie">3D</a></li>
-                        <li><a href="./about.html" data-after="About">About</a></li>
+                        <li>
+                            <a id="about-link" data-lang-href-en="./about.html" data-lang-href-sk="./aboutsk.html">
+                                <span data-lang="en" style="color: inherit;">About</span>
+                                <span data-lang="sk" style="color: inherit;">O aplikácii</span>
+                            </a>
+                        </li>
+
                         <button id="language-switcher_en">🇬🇧<strong>ENG</strong></button>
                         <button id="language-switcher_sk">🇸🇰<strong>SK</strong></button>
                     </ul>
@@ -66,7 +73,7 @@
     <div class="containerGraph">
         <canvas id="altitudeGraph"></canvas>
     </div>
-    <script src="https://unpkg.com/cesium/Build/Cesium/Cesium.js"></script>
+
 </body>
 <script>
 
@@ -80,7 +87,7 @@
 
     viewer.terrainProvider = Cesium.createWorldTerrain();
 
-// pozicie z lat a long
+    // pozicie z lat a long
 
     function changeId() {
         document.getElementById("loading").id = "loadingNone";
@@ -223,7 +230,7 @@
             }
         }
 
-  
+
         function parseLatLong(latLongString) {
             var latitude = parseFloat(latLongString.substring(0, 2)) +
                 parseFloat(latLongString.substring(2, 7)) / 60000.0;
@@ -244,10 +251,10 @@
             var positionRegex = /^B([\d]{2})([\d]{2})([\d]{2})([\d]{7}[NS][\d]{8}[EW])([AV])([-\d][\d]{4})([-\d][\d]{4})/;
             var positionMatch = positionRecord.match(positionRegex);
             if (positionMatch) {
-                
+
                 var positionTime = new Date(flightDate.getTime());
                 positionTime.setUTCHours(parseInt(positionMatch[1], 10), parseInt(positionMatch[2], 10), parseInt(positionMatch[3], 10));
-            
+
                 if (model.recordTime.length > 0 &&
                     model.recordTime[0] > positionTime) {
                     positionTime.setDate(flightDate.getDate() + 1);
@@ -270,7 +277,7 @@
             throw new IGCException(invalidFileMessage);
         }
 
-        
+
         var model = {
             headers: [],
             recordTime: [],
@@ -351,7 +358,7 @@
         });
 
 
-        
+
         var startPoint = viewer.entities.add({
             position: positions[0],
             point: {
@@ -368,7 +375,7 @@
             },
         });
 
-        
+
         var track = {
             polyline: polyline,
             startPoint: startPoint,
@@ -392,7 +399,7 @@
     //graf
     function renderAltitudeGraph(parsedFlight) {
         const altitudeCanvas = document.getElementById('altitudeGraph');
-        altitudeCanvas.style.backgroundColor = '#29323c'; 
+        altitudeCanvas.style.backgroundColor = '#29323c';
 
         const altitudeData = parsedFlight.gpsAltitude;
         const timeData = parsedFlight.recordTime.map(time => time.toISOString().substr(11, 8));
@@ -463,7 +470,34 @@
 
         var animationInterval = setInterval(updateDotPosition, interval);
     }
+    // jazyk
+    let currentLang = 'sk'; // Default language
 
+    switchLanguage(currentLang);
+    document.getElementById('language-switcher_en').addEventListener('click', function () {
+        switchLanguage('en');
+    });
+
+    document.getElementById('language-switcher_sk').addEventListener('click', function () {
+        switchLanguage('sk');
+    });
+
+    function switchLanguage(lang) {
+        let elements = document.querySelectorAll('[data-lang]');
+        elements.forEach(function (element) {
+            if (element.getAttribute('data-lang') == lang) {
+                element.style.display = 'inline';
+            } else {
+                element.style.display = 'none';
+            }
+        });
+
+        // Switch the href for the about link
+        let aboutLink = document.getElementById('about-link');
+        aboutLink.href = aboutLink.getAttribute('data-lang-href-' + lang);
+
+        currentLang = lang; // Update the current language
+    }
 </script>
 
 </html>
