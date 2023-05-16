@@ -75,18 +75,84 @@ importButton.addEventListener("click", function () {
   fileInput.click();
 });
 
-//add event listener for file input
+// Define the processFiles function
+function processFiles(files) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fileReader = new FileReader();
+
+    fileReader.onload = function () {
+      const data = fileReader.result;
+      const features = igcFormat.readFeatures(data, {
+        featureProjection: 'EPSG:3857',
+      });
+      vectorSource.addFeatures(features);
+
+      features.forEach(function (feature) {
+        const pilotName = feature.get('PLT');
+        const gliderName = feature.get('GTY');
+        const startTime = feature.getGeometry().getFirstCoordinate()[2];
+        const stopTime = feature.getGeometry().getLastCoordinate()[2];
+        const durationSeconds = stopTime - startTime;
+        const durationHours = Math.floor(durationSeconds / 3600);
+        const durationMinutes = Math.floor((durationSeconds % 3600) / 60);
+        const durationString = durationHours.toString().padStart(2, '0') + ':' + durationMinutes.toString().padStart(2, '0') + ':' + (durationSeconds % 60).toString().padStart(2, '0');
+
+        const table = document.getElementById("flight-table");
+        const row = table.insertRow();
+        const pilotCell = row.insertCell(0);
+        const gliderCell = row.insertCell(1);
+        const durationCell = row.insertCell(2);
+        pilotCell.innerHTML = pilotName;
+        gliderCell.innerHTML = gliderName;
+        durationCell.innerHTML = durationString;
+      });
+    };
+
+    fileReader.readAsText(file);
+  }
+}
+
+// Add event listener for file input
 fileInput.addEventListener("change", function () {
-  const file = fileInput.files[0];
-  reader.onload = function () {
-    const data = reader.result;
-    const features = igcFormat.readFeatures(data, {
-      featureProjection: 'EPSG:3857',
-    });
-    vectorSource.addFeatures(features);
-  };
-  reader.readAsText(file);
+  const files = fileInput.files;
+
+  if (files.length === 1) {
+    const file = files[0];
+    reader.onload = function () {
+      const data = reader.result;
+      const features = igcFormat.readFeatures(data, {
+        featureProjection: 'EPSG:3857',
+      });
+      vectorSource.addFeatures(features);
+
+      features.forEach(function (feature) {
+        const pilotName = feature.get('PLT');
+        const gliderName = feature.get('GTY');
+        const startTime = feature.getGeometry().getFirstCoordinate()[2];
+        const stopTime = feature.getGeometry().getLastCoordinate()[2];
+        const durationSeconds = stopTime - startTime;
+        const durationHours = Math.floor(durationSeconds / 3600);
+        const durationMinutes = Math.floor((durationSeconds % 3600) / 60);
+        const durationString = durationHours.toString().padStart(2, '0') + ':' + durationMinutes.toString().padStart(2, '0') + ':' + (durationSeconds % 60).toString().padStart(2, '0');
+
+        const table = document.getElementById("flight-table");
+        const row = table.insertRow();
+        const pilotCell = row.insertCell(0);
+        const gliderCell = row.insertCell(1);
+        const durationCell = row.insertCell(2);
+        pilotCell.innerHTML = pilotName;
+        gliderCell.innerHTML = gliderName;
+        durationCell.innerHTML = durationString;
+      });
+    };
+    reader.readAsText(file);
+  } else {
+    processFiles(files);
+  }
 });
+
+
 
 const igcFormat = new IGC();
 
@@ -227,7 +293,7 @@ const featureOverlay = new VectorLayer({
       anchorXUnits: 'fraction',
       anchorYUnits: 'fraction',
       opacity: 1,
-      src: '/img/glider.png' // replace this with the path to your icon image
+      src: '/assets/glider.png' // replace this with the path to your icon image
     }),
   }),
 });
@@ -318,42 +384,8 @@ function toTimeString(totalSeconds) { // funkcia na premenu sekund na normalny f
   return result;
 }
 // NIZSIE JE ZAS KOD PRE TABULKU VYPIS
-
 //add event listener for file input
 //add event listener for file input
-fileInput.addEventListener("change", function () {
-  const file = fileInput.files[0];
-  reader.onload = function () {
-    const data = reader.result;
-    const features = igcFormat.readFeatures(data, {
-      featureProjection: 'EPSG:3857',
-    });
-    vectorSource.addFeatures(features);
-
-    features.forEach(function (feature) {
-      const pilotName = feature.get('PLT');
-      const gliderName = feature.get('GTY');
-      const startTime = feature.getGeometry().getFirstCoordinate()[2];
-      const stopTime = feature.getGeometry().getLastCoordinate()[2];
-      const durationSeconds = stopTime - startTime;
-      const durationHours = Math.floor(durationSeconds / 3600);
-      const durationMinutes = Math.floor((durationSeconds % 3600) / 60);
-      const durationString = durationHours.toString().padStart(2, '0') + ':' + durationMinutes.toString().padStart(2, '0') + ':' + (durationSeconds % 60).toString().padStart(2, '0');
-
-      const table = document.getElementById("flight-table");
-      const row = table.insertRow();
-      const pilotCell = row.insertCell(0);
-      const gliderCell = row.insertCell(1);
-      const durationCell = row.insertCell(2);
-      pilotCell.innerHTML = pilotName;
-      gliderCell.innerHTML = gliderName;
-      durationCell.innerHTML = durationString;
-    });
-
-
-  };
-
-});
 function extractDate(igcFile) {
 
   var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
