@@ -520,3 +520,213 @@ function switchLanguage(lang) {
 
 
 
+// zly format suboru
+function IGCException(message) {
+  'use strict';
+
+  this.message = message;
+  this.name = "IGCException";
+}
+
+function parseIGC(igcFile) {
+  'use strict';
+
+
+  function parseManufacturer(aRecord) {
+      var manufacturers = {
+          'GCS': 'Garrecht',
+          'CAM': 'Cambridge Aero Instruments',
+          'DSX': 'Data Swan',
+          'EWA': 'EW Avionics',
+          'FIL': 'Filser',
+          'FLA': 'FLARM',
+          'SCH': 'Scheffel',
+          'ACT': 'Aircotec',
+          'NKL': 'Nielsen Kellerman',
+          'LXN': 'LX Navigation',
+          'IMI': 'IMI Gliding Equipment',
+          'NTE': 'New Technologies s.r.l.',
+          'PES': 'Peschges',
+          'PRT': 'Print Technik',
+          'SDI': 'Streamline Data Instruments',
+          'TRI': 'Triadis Engineering GmbH',
+          'LXV': 'LXNAV d.o.o.',
+          'WES': 'Westerboer',
+          'XCS': 'XCSoar',
+          'ZAN': 'Zander'
+      };
+
+      var manufacturerInfo = {
+          manufacturer: 'Unknown',
+          serial: aRecord.substring(4, 7)
+      };
+
+      var manufacturerCode = aRecord.substring(1, 4);
+      if (manufacturers[manufacturerCode]) {
+          manufacturerInfo.manufacturer = manufacturers[manufacturerCode];
+      }
+
+      return manufacturerInfo;
+  }
+
+  function extractDate(igcFile) {
+      var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
+      if (dateRecord === null) {
+          throw new IGCException('The file does not contain a date header.');
+      }
+
+      var day = parseInt(dateRecord[1], 10);
+      var month = parseInt(dateRecord[2], 10) - 1;
+      var year = parseInt(dateRecord[3], 10);
+
+      if (year < 80) {
+          year += 2000;
+      } else {
+          year += 1900;
+      }
+      return new Date(Date.UTC(year, month, day));
+  }
+
+  function parseHeader(headerRecord) {
+      var headerSubtypes = {
+          'PLT': 'Pilot',
+          'CM2': 'Crew member 2',
+          'GTY': 'Glider type',
+          'GID': 'Glider ID',
+          'DTM': 'GPS Datum',
+          'RFW': 'Firmware version',
+          'RHW': 'Hardware version',
+          'FTY': 'Flight recorder type',
+          'GPS': 'GPS',
+          'PRS': 'Pressure sensor',
+          'FRS': 'Security suspect, use validation program',
+          'CID': 'Competition ID',
+          'CCL': 'Competition class'
+      };
+
+      var headerName = headerSubtypes[headerRecord.substring(2, 5)];
+      if (headerName !== undefined) {
+          var colonIndex = headerRecord.indexOf(':');
+          if (colonIndex !== -1) {
+              var headerValue = headerRecord.substring(colonIndex + 1);
+              if (headerValue.length > 0 && /([^\s]+)/.test(headerValue)) {
+                  return {
+                      name: headerName,
+                      value: headerValue
+                  };
+              }
+          }
+      }
+  }
+
+
+  function parseLatLong(latLongString) {
+      var latitude = parseFloat(latLongString.substring(0, 2)) +
+          parseFloat(latLongString.substring(2, 7)) / 60000.0;
+      if (latLongString.charAt(7) === 'S') {
+          latitude = -latitude;
+      }
+
+      var longitude = parseFloat(latLongString.substring(8, 11)) +
+          parseFloat(latLongString.substring(11, 16)) / 60000.0;
+      if (latLongString.charAt(16) === 'W') {
+          longitude = -longitude;
+      }
+
+      return [latitude, longitude];
+  }
+
+  function parsePosition(positionRecord, model, flightDate) {
+      var positionRegex = /^B([\d]{2})([\d]{2})([\d]{2})([\d]{7}[NS][\d]{8}[EW])([AV])([-\d][\d]{4})([-\d][\d]{4})/;
+      var positionMatch = positionRecord.match(positionRegex);
+      if (positionMatch) {
+
+          var positionTime = new Date(flightDate.getTime());
+          positionTime.setUTCHours(parseInt(positionMatch[1], 10), parseInt(positionMatch[2], 10), parseInt(positionMatch[3], 10));
+
+          if (model.recordTime.length > 0 &&
+              model.recordTime[0] > positionTime) {
+              positionTime.setDate(flightDate.getDate() + 1);
+          }
+          var curPosition = parseLatLong(positionMatch[4]);
+          if ((curPosition[0] !== 0) && (curPosition[1] !== 0)) {
+              return {
+                  recordTime: positionTime,
+                  latLong: curPosition,
+                  pressureAltitude: parseInt(positionMatch[6], 10),
+                  gpsAltitude: parseInt(positionMatch[7], 10)
+              };
+          }
+      }
+  }
+
+  var invalidFileMessage = 'This is not IGC file';
+  var igcLines = igcFile.split('\n');
+  if (igcLines.length < 2) {
+      throw new IGCException(invalidFileMessage);
+  }
+
+
+  var model = {
+      headers: [],
+      recordTime: [],
+      latLong: [],
+      pressureAltitude: [],
+      gpsAltitude: [],
+      taskpoints: []
+  };
+
+  if (!(/^A[\w]{6}/).test(igcLines[0])) {
+      throw new IGCException(invalidFileMessage);
+  }
+
+  var manufacturerInfo = parseManufacturer(igcLines[0]);
+  model.headers.push({
+      name: 'Logger manufacturer',
+      value: manufacturerInfo.manufacturer
+  });
+
+  model.headers.push({
+      name: 'Logger serial number',
+      value: manufacturerInfo.serial
+  });
+
+  var flightDate = extractDate(igcFile);
+  var lineIndex;
+  var positionData;
+  var recordType;
+  var currentLine;
+  var headerData;
+
+  for (lineIndex = 0; lineIndex < igcLines.length; lineIndex++) {
+      currentLine = igcLines[lineIndex];
+      recordType = currentLine.charAt(0);
+      switch (recordType) {
+          case 'B': // Position fix
+              positionData = parsePosition(currentLine, model, flightDate);
+              if (positionData) {
+                  model.recordTime.push(positionData.recordTime);
+                  model.latLong.push(positionData.latLong);
+                  model.pressureAltitude.push(positionData.pressureAltitude);
+                  model.gpsAltitude.push(positionData.gpsAltitude);
+              }
+              break;
+
+          case 'C':
+              var taskRegex = /^C[\d]{7}[NS][\d]{8}[EW].*/;
+              if (taskRegex.test(currentLine)) {
+                  model.taskpoints.push(currentLine.substring(1).trim());
+              }
+              break;
+
+          case 'H':
+              headerData = parseHeader(currentLine);
+              if (headerData) {
+                  model.headers.push(headerData);
+              }
+              break;
+      }
+  }
+  return model;
+
+}

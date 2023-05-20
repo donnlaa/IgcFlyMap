@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>IgcFlyMap</title>
-    <script src="https://unpkg.com/cesium/Build/Cesium/Cesium.js"></script>
-    <link href="https://unpkg.com/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-    <!-- <script src="/assets/cesium/Build/Cesium/Cesium.js"></script>
-    <link href="/assets/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet"> -->
+    <!-- <script src="https://unpkg.com/cesium/Build/Cesium/Cesium.js"></script>
+    <link href="https://unpkg.com/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet"> -->
+    <script src="/assets/cesium/Build/Cesium/Cesium.js"></script>
+    <link href="/assets/cesium/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <link rel="stylesheet" href="./style2.css">
     <script src="https://kit.fontawesome.com/7e2e637b3b.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
@@ -53,6 +53,7 @@
             <div>Loading your flight</div>
         </div>
         <div id="pilot-name" class="pilot-name"></div>
+        <div id="altitude" class="altitude"></div>
         <div id="pilot-name"></div>
 
 
@@ -357,7 +358,7 @@
             },
         });
 
-
+        var flightPath = parsedFlight.latLong;
 
         var startPoint = viewer.entities.add({
             position: positions[0],
@@ -369,9 +370,10 @@
 
         var endPoint = viewer.entities.add({
             position: positions[positions.length - 1],
-            point: {
-                pixelSize: 10,
-                color: Cesium.Color.RED,
+            billboard: {
+                image: '/assets/finish.png', // Add your image url here
+                width: 32, // These numbers are just placeholders
+                height: 32, // Adjust as needed for your specific icon
             },
         });
 
@@ -381,11 +383,15 @@
             startPoint: startPoint,
             endPoint: endPoint,
         };
+        var altitudeIndex = 0; // Create an index to track the current altitude during the flight
+        var altitudeDisplay = document.getElementById("altitude"); // Assuming you have an HTML element with id "altitude"
+
         var pilotName = parsedFlight.headers.find(header => header.name === "Pilot");
         var gliderName = parsedFlight.headers.find(header => header.name === "Glider type");
         if (pilotName && gliderName) {
             document.getElementById("pilot-name").innerText = "Pilot: " + pilotName.value + "\nGlider: " + gliderName.value;
-
+            // Show the initial altitude
+            altitudeDisplay.innerText = "Altitude: " + parsedFlight.gpsAltitude[altitudeIndex] + " m";
         }
         console.log("all good");
         console.log("Flight headers:", parsedFlight.headers);
@@ -448,13 +454,16 @@
 
         var movingDot = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(flightPath[0][1], flightPath[0][0], parsedFlight.gpsAltitude[0]),
-            point: {
-                pixelSize: 11,
-                color: Cesium.Color.WHITE,
+            billboard: {
+                image: '/assets/glider.png', // Add your image url here
+                width: 32, // These numbers are just placeholders
+                height: 32, // Adjust as needed for your specific icon
             },
         });
 
+
         var currentPositionIndex = 0;
+        var altitudeDisplay = document.getElementById("altitude"); // Get the altitude display
 
         function updateDotPosition() {
             if (currentPositionIndex >= totalPositions) {
@@ -465,11 +474,16 @@
             var latLong = flightPath[currentPositionIndex];
             var altitude = parsedFlight.gpsAltitude[currentPositionIndex];
             movingDot.position = Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
+
+            // Update the altitude display
+            altitudeDisplay.innerText = "Altitude: " + altitude + " m";
+
             currentPositionIndex++;
         }
 
         var animationInterval = setInterval(updateDotPosition, interval);
     }
+
     // jazyk
     let currentLang = 'sk'; // Default language
 
