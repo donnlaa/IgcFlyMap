@@ -10,7 +10,7 @@ import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { getVectorContext } from 'ol/render';
 import { fromLonLat } from 'ol/proj';
 
-
+var parsedFlight;
 const colors = {
   'Marek Kováč': 'rgba(0, 0, 255, 0.7)',
   'Ryland Jordan': 'rgba(254, 0, 0, 0.8)',
@@ -75,6 +75,8 @@ importButton.addEventListener("click", function () {
   fileInput.click();
 });
 
+
+
 // Define the processFiles function
 function processFiles(files) {
   for (let i = 0; i < files.length; i++) {
@@ -82,7 +84,9 @@ function processFiles(files) {
     const fileReader = new FileReader();
 
     fileReader.onload = function () {
+
       const data = fileReader.result;
+      parsedFlight = parseIGC(data);
       const features = igcFormat.readFeatures(data, {
         featureProjection: 'EPSG:3857',
       });
@@ -91,6 +95,7 @@ function processFiles(files) {
       features.forEach(function (feature) {
         const pilotName = feature.get('PLT');
         const gliderName = feature.get('GTY');
+        const kilometers = calculateTotalDistance(parsedFlight);
         const startTime = feature.getGeometry().getFirstCoordinate()[2];
         const stopTime = feature.getGeometry().getLastCoordinate()[2];
         const durationSeconds = stopTime - startTime;
@@ -98,17 +103,20 @@ function processFiles(files) {
         const durationMinutes = Math.floor((durationSeconds % 3600) / 60);
         const durationString = durationHours.toString().padStart(2, '0') + ':' + durationMinutes.toString().padStart(2, '0') + ':' + (durationSeconds % 60).toString().padStart(2, '0');
 
+
         const table = document.getElementById("flight-table");
         const row = table.insertRow();
         const pilotCell = row.insertCell(0);
         const gliderCell = row.insertCell(1);
         const durationCell = row.insertCell(2);
+        const kilometerCell = row.insertCell(3);
         pilotCell.innerHTML = pilotName;
         gliderCell.innerHTML = gliderName;
         durationCell.innerHTML = durationString;
+        kilometerCell.innerHTML = kilometers.toFixed(2);
       });
     };
-
+    console.log("HI");
     fileReader.readAsText(file);
   }
 }
@@ -121,6 +129,8 @@ fileInput.addEventListener("change", function () {
     const file = files[0];
     reader.onload = function () {
       const data = reader.result;
+      parsedFlight = parseIGC(data);
+      console.log(parsedFlight);
       const features = igcFormat.readFeatures(data, {
         featureProjection: 'EPSG:3857',
       });
@@ -129,6 +139,7 @@ fileInput.addEventListener("change", function () {
       features.forEach(function (feature) {
         const pilotName = feature.get('PLT');
         const gliderName = feature.get('GTY');
+        const kilometers = calculateTotalDistance(parsedFlight);
         const startTime = feature.getGeometry().getFirstCoordinate()[2];
         const stopTime = feature.getGeometry().getLastCoordinate()[2];
         const durationSeconds = stopTime - startTime;
@@ -136,14 +147,22 @@ fileInput.addEventListener("change", function () {
         const durationMinutes = Math.floor((durationSeconds % 3600) / 60);
         const durationString = durationHours.toString().padStart(2, '0') + ':' + durationMinutes.toString().padStart(2, '0') + ':' + (durationSeconds % 60).toString().padStart(2, '0');
 
+        var altitudeIndex = 0;
+        const pilotNameDisplay = document.getElementById('pilot-name-display');
+        pilotNameDisplay.innerHTML = 'Pilot: ' + feature.get('PLT');
+        const altitudeDisplay = document.getElementById('altitude-display');
+        altitudeDisplay.innerHTML = "Nadmorská výška: " + parsedFlight.gpsAltitude[altitudeIndex] + " m";
+
         const table = document.getElementById("flight-table");
         const row = table.insertRow();
         const pilotCell = row.insertCell(0);
         const gliderCell = row.insertCell(1);
         const durationCell = row.insertCell(2);
+        const kilometerCell = row.insertCell(3);
         pilotCell.innerHTML = pilotName;
         gliderCell.innerHTML = gliderName;
         durationCell.innerHTML = durationString;
+        kilometerCell.innerHTML = kilometers.toFixed(2);
       });
     };
     reader.readAsText(file);
@@ -213,6 +232,8 @@ navigator.geolocation.getCurrentPosition(function (position) {
 
 let point = null;
 let line = null;
+
+
 
 const displaySnap = function (coordinate) {
   const closestFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
@@ -339,10 +360,12 @@ playButton.addEventListener("click", function () {
   }
 });
 
+
 function animate() {
   const numSteps = 100;
   const step = time.duration / numSteps;
   let i = 0;
+  const altitudeDisplay = document.getElementById('altitude-display');  // Get the altitude display
   const animateStep = function (timestamp) {
     const progress = Math.min((timestamp - start) / (step * 1000), 1);
     control.value = progress * 100;
@@ -362,6 +385,11 @@ function animate() {
       const date = extractDate(reader.result);
       const info = document.getElementById("info");
       info.innerHTML = feature.get("PLT") + " (" + date.toDateString() + ") " + seconds.toTimeString();
+
+      // Update the altitude display
+      const altitudeIndex = Math.floor(parsedFlight.gpsAltitude.length * progress);
+      const altitude = parsedFlight.gpsAltitude[altitudeIndex];
+      altitudeDisplay.innerHTML = "Nadmorská výška: " + altitude + " m";
     });
     if (i % Math.floor(numSteps / 100) === 0 || progress === 1) {
       map.render();
@@ -376,6 +404,7 @@ function animate() {
   };
   animationFrameId = requestAnimationFrame(animateStep);
 }
+
 // text pod mapou co pise informacie o lete... 
 function toTimeString(totalSeconds) { // funkcia na premenu sekund na normalny format casu
   const totalMs = totalSeconds * 1000;
@@ -533,162 +562,162 @@ function parseIGC(igcFile) {
 
 
   function parseManufacturer(aRecord) {
-      var manufacturers = {
-          'GCS': 'Garrecht',
-          'CAM': 'Cambridge Aero Instruments',
-          'DSX': 'Data Swan',
-          'EWA': 'EW Avionics',
-          'FIL': 'Filser',
-          'FLA': 'FLARM',
-          'SCH': 'Scheffel',
-          'ACT': 'Aircotec',
-          'NKL': 'Nielsen Kellerman',
-          'LXN': 'LX Navigation',
-          'IMI': 'IMI Gliding Equipment',
-          'NTE': 'New Technologies s.r.l.',
-          'PES': 'Peschges',
-          'PRT': 'Print Technik',
-          'SDI': 'Streamline Data Instruments',
-          'TRI': 'Triadis Engineering GmbH',
-          'LXV': 'LXNAV d.o.o.',
-          'WES': 'Westerboer',
-          'XCS': 'XCSoar',
-          'ZAN': 'Zander'
-      };
+    var manufacturers = {
+      'GCS': 'Garrecht',
+      'CAM': 'Cambridge Aero Instruments',
+      'DSX': 'Data Swan',
+      'EWA': 'EW Avionics',
+      'FIL': 'Filser',
+      'FLA': 'FLARM',
+      'SCH': 'Scheffel',
+      'ACT': 'Aircotec',
+      'NKL': 'Nielsen Kellerman',
+      'LXN': 'LX Navigation',
+      'IMI': 'IMI Gliding Equipment',
+      'NTE': 'New Technologies s.r.l.',
+      'PES': 'Peschges',
+      'PRT': 'Print Technik',
+      'SDI': 'Streamline Data Instruments',
+      'TRI': 'Triadis Engineering GmbH',
+      'LXV': 'LXNAV d.o.o.',
+      'WES': 'Westerboer',
+      'XCS': 'XCSoar',
+      'ZAN': 'Zander'
+    };
 
-      var manufacturerInfo = {
-          manufacturer: 'Unknown',
-          serial: aRecord.substring(4, 7)
-      };
+    var manufacturerInfo = {
+      manufacturer: 'Unknown',
+      serial: aRecord.substring(4, 7)
+    };
 
-      var manufacturerCode = aRecord.substring(1, 4);
-      if (manufacturers[manufacturerCode]) {
-          manufacturerInfo.manufacturer = manufacturers[manufacturerCode];
-      }
+    var manufacturerCode = aRecord.substring(1, 4);
+    if (manufacturers[manufacturerCode]) {
+      manufacturerInfo.manufacturer = manufacturers[manufacturerCode];
+    }
 
-      return manufacturerInfo;
+    return manufacturerInfo;
   }
 
   function extractDate(igcFile) {
-      var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
-      if (dateRecord === null) {
-          throw new IGCException('The file does not contain a date header.');
-      }
+    var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
+    if (dateRecord === null) {
+      throw new IGCException('The file does not contain a date header.');
+    }
 
-      var day = parseInt(dateRecord[1], 10);
-      var month = parseInt(dateRecord[2], 10) - 1;
-      var year = parseInt(dateRecord[3], 10);
+    var day = parseInt(dateRecord[1], 10);
+    var month = parseInt(dateRecord[2], 10) - 1;
+    var year = parseInt(dateRecord[3], 10);
 
-      if (year < 80) {
-          year += 2000;
-      } else {
-          year += 1900;
-      }
-      return new Date(Date.UTC(year, month, day));
+    if (year < 80) {
+      year += 2000;
+    } else {
+      year += 1900;
+    }
+    return new Date(Date.UTC(year, month, day));
   }
 
   function parseHeader(headerRecord) {
-      var headerSubtypes = {
-          'PLT': 'Pilot',
-          'CM2': 'Crew member 2',
-          'GTY': 'Glider type',
-          'GID': 'Glider ID',
-          'DTM': 'GPS Datum',
-          'RFW': 'Firmware version',
-          'RHW': 'Hardware version',
-          'FTY': 'Flight recorder type',
-          'GPS': 'GPS',
-          'PRS': 'Pressure sensor',
-          'FRS': 'Security suspect, use validation program',
-          'CID': 'Competition ID',
-          'CCL': 'Competition class'
-      };
+    var headerSubtypes = {
+      'PLT': 'Pilot',
+      'CM2': 'Crew member 2',
+      'GTY': 'Glider type',
+      'GID': 'Glider ID',
+      'DTM': 'GPS Datum',
+      'RFW': 'Firmware version',
+      'RHW': 'Hardware version',
+      'FTY': 'Flight recorder type',
+      'GPS': 'GPS',
+      'PRS': 'Pressure sensor',
+      'FRS': 'Security suspect, use validation program',
+      'CID': 'Competition ID',
+      'CCL': 'Competition class'
+    };
 
-      var headerName = headerSubtypes[headerRecord.substring(2, 5)];
-      if (headerName !== undefined) {
-          var colonIndex = headerRecord.indexOf(':');
-          if (colonIndex !== -1) {
-              var headerValue = headerRecord.substring(colonIndex + 1);
-              if (headerValue.length > 0 && /([^\s]+)/.test(headerValue)) {
-                  return {
-                      name: headerName,
-                      value: headerValue
-                  };
-              }
-          }
+    var headerName = headerSubtypes[headerRecord.substring(2, 5)];
+    if (headerName !== undefined) {
+      var colonIndex = headerRecord.indexOf(':');
+      if (colonIndex !== -1) {
+        var headerValue = headerRecord.substring(colonIndex + 1);
+        if (headerValue.length > 0 && /([^\s]+)/.test(headerValue)) {
+          return {
+            name: headerName,
+            value: headerValue
+          };
+        }
       }
+    }
   }
 
 
   function parseLatLong(latLongString) {
-      var latitude = parseFloat(latLongString.substring(0, 2)) +
-          parseFloat(latLongString.substring(2, 7)) / 60000.0;
-      if (latLongString.charAt(7) === 'S') {
-          latitude = -latitude;
-      }
+    var latitude = parseFloat(latLongString.substring(0, 2)) +
+      parseFloat(latLongString.substring(2, 7)) / 60000.0;
+    if (latLongString.charAt(7) === 'S') {
+      latitude = -latitude;
+    }
 
-      var longitude = parseFloat(latLongString.substring(8, 11)) +
-          parseFloat(latLongString.substring(11, 16)) / 60000.0;
-      if (latLongString.charAt(16) === 'W') {
-          longitude = -longitude;
-      }
+    var longitude = parseFloat(latLongString.substring(8, 11)) +
+      parseFloat(latLongString.substring(11, 16)) / 60000.0;
+    if (latLongString.charAt(16) === 'W') {
+      longitude = -longitude;
+    }
 
-      return [latitude, longitude];
+    return [latitude, longitude];
   }
 
   function parsePosition(positionRecord, model, flightDate) {
-      var positionRegex = /^B([\d]{2})([\d]{2})([\d]{2})([\d]{7}[NS][\d]{8}[EW])([AV])([-\d][\d]{4})([-\d][\d]{4})/;
-      var positionMatch = positionRecord.match(positionRegex);
-      if (positionMatch) {
+    var positionRegex = /^B([\d]{2})([\d]{2})([\d]{2})([\d]{7}[NS][\d]{8}[EW])([AV])([-\d][\d]{4})([-\d][\d]{4})/;
+    var positionMatch = positionRecord.match(positionRegex);
+    if (positionMatch) {
 
-          var positionTime = new Date(flightDate.getTime());
-          positionTime.setUTCHours(parseInt(positionMatch[1], 10), parseInt(positionMatch[2], 10), parseInt(positionMatch[3], 10));
+      var positionTime = new Date(flightDate.getTime());
+      positionTime.setUTCHours(parseInt(positionMatch[1], 10), parseInt(positionMatch[2], 10), parseInt(positionMatch[3], 10));
 
-          if (model.recordTime.length > 0 &&
-              model.recordTime[0] > positionTime) {
-              positionTime.setDate(flightDate.getDate() + 1);
-          }
-          var curPosition = parseLatLong(positionMatch[4]);
-          if ((curPosition[0] !== 0) && (curPosition[1] !== 0)) {
-              return {
-                  recordTime: positionTime,
-                  latLong: curPosition,
-                  pressureAltitude: parseInt(positionMatch[6], 10),
-                  gpsAltitude: parseInt(positionMatch[7], 10)
-              };
-          }
+      if (model.recordTime.length > 0 &&
+        model.recordTime[0] > positionTime) {
+        positionTime.setDate(flightDate.getDate() + 1);
       }
+      var curPosition = parseLatLong(positionMatch[4]);
+      if ((curPosition[0] !== 0) && (curPosition[1] !== 0)) {
+        return {
+          recordTime: positionTime,
+          latLong: curPosition,
+          pressureAltitude: parseInt(positionMatch[6], 10),
+          gpsAltitude: parseInt(positionMatch[7], 10)
+        };
+      }
+    }
   }
 
   var invalidFileMessage = 'This is not IGC file';
   var igcLines = igcFile.split('\n');
   if (igcLines.length < 2) {
-      throw new IGCException(invalidFileMessage);
+    throw new IGCException(invalidFileMessage);
   }
 
 
   var model = {
-      headers: [],
-      recordTime: [],
-      latLong: [],
-      pressureAltitude: [],
-      gpsAltitude: [],
-      taskpoints: []
+    headers: [],
+    recordTime: [],
+    latLong: [],
+    pressureAltitude: [],
+    gpsAltitude: [],
+    taskpoints: []
   };
 
   if (!(/^A[\w]{6}/).test(igcLines[0])) {
-      throw new IGCException(invalidFileMessage);
+    throw new IGCException(invalidFileMessage);
   }
 
   var manufacturerInfo = parseManufacturer(igcLines[0]);
   model.headers.push({
-      name: 'Logger manufacturer',
-      value: manufacturerInfo.manufacturer
+    name: 'Logger manufacturer',
+    value: manufacturerInfo.manufacturer
   });
 
   model.headers.push({
-      name: 'Logger serial number',
-      value: manufacturerInfo.serial
+    name: 'Logger serial number',
+    value: manufacturerInfo.serial
   });
 
   var flightDate = extractDate(igcFile);
@@ -699,34 +728,64 @@ function parseIGC(igcFile) {
   var headerData;
 
   for (lineIndex = 0; lineIndex < igcLines.length; lineIndex++) {
-      currentLine = igcLines[lineIndex];
-      recordType = currentLine.charAt(0);
-      switch (recordType) {
-          case 'B': // Position fix
-              positionData = parsePosition(currentLine, model, flightDate);
-              if (positionData) {
-                  model.recordTime.push(positionData.recordTime);
-                  model.latLong.push(positionData.latLong);
-                  model.pressureAltitude.push(positionData.pressureAltitude);
-                  model.gpsAltitude.push(positionData.gpsAltitude);
-              }
-              break;
+    currentLine = igcLines[lineIndex];
+    recordType = currentLine.charAt(0);
+    switch (recordType) {
+      case 'B': // Position fix
+        positionData = parsePosition(currentLine, model, flightDate);
+        if (positionData) {
+          model.recordTime.push(positionData.recordTime);
+          model.latLong.push(positionData.latLong);
+          model.pressureAltitude.push(positionData.pressureAltitude);
+          model.gpsAltitude.push(positionData.gpsAltitude);
+        }
+        break;
 
-          case 'C':
-              var taskRegex = /^C[\d]{7}[NS][\d]{8}[EW].*/;
-              if (taskRegex.test(currentLine)) {
-                  model.taskpoints.push(currentLine.substring(1).trim());
-              }
-              break;
+      case 'C':
+        var taskRegex = /^C[\d]{7}[NS][\d]{8}[EW].*/;
+        if (taskRegex.test(currentLine)) {
+          model.taskpoints.push(currentLine.substring(1).trim());
+        }
+        break;
 
-          case 'H':
-              headerData = parseHeader(currentLine);
-              if (headerData) {
-                  model.headers.push(headerData);
-              }
-              break;
-      }
+      case 'H':
+        headerData = parseHeader(currentLine);
+        if (headerData) {
+          model.headers.push(headerData);
+        }
+        break;
+    }
   }
   return model;
 
+}
+
+
+
+
+function calculateTotalDistance(parsedFlight) {
+  let totalDistance = 0;  // in km
+  let R = 6371;  // Earth's radius in km
+
+  for (let i = 1; i < parsedFlight.latLong.length; i++) {
+    let lat1 = parsedFlight.latLong[i - 1][0];
+    let lon1 = parsedFlight.latLong[i - 1][1];
+    let lat2 = parsedFlight.latLong[i][0];
+    let lon2 = parsedFlight.latLong[i][1];
+
+    let dLat = deg2rad(lat2 - lat1);
+    let dLon = deg2rad(lon2 - lon1);
+    let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    let distance = R * c;  // distance in km
+    totalDistance += distance;
+  }
+
+  return totalDistance;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI / 180);
 }
