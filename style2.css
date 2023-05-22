@@ -998,3 +998,7 @@ a:hover h1 span {
 	background-color: rgb(230, 108, 32);
 	transition: 0.2s ease-in;
 }
+
+.containerGraph2 {
+	margin-top: 227px;
+}

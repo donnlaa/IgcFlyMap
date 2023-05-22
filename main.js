@@ -135,7 +135,7 @@ fileInput.addEventListener("change", function () {
         featureProjection: 'EPSG:3857',
       });
       vectorSource.addFeatures(features);
-
+      renderAltitudeGraph(parsedFlight);
       features.forEach(function (feature) {
         const pilotName = feature.get('PLT');
         const gliderName = feature.get('GTY');
@@ -350,37 +350,59 @@ playButton.addEventListener("click", function () {
   if (!isPlaying) {
     playButton.textContent = "Pause Animation";
     isPlaying = true;
-    start = performance.now() - lastStep;
     animate();
   } else {
     playButton.textContent = "Play Animation";
     isPlaying = false;
-    lastStep = performance.now() - start;
     cancelAnimationFrame(animationFrameId);
   }
 });
 
 
+// Global animation speed
+let speed = 1;
+
+// Slower and faster buttons
+const slowerButton = document.getElementById('slower-button');
+const fasterButton = document.getElementById('faster-button');
+
+slowerButton.addEventListener('click', function () {
+  // Decrease speed to slow down the animation
+  speed /= 2;
+});
+
+fasterButton.addEventListener('click', function () {
+  // Increase speed to speed up the animation
+  speed *= 2;
+});
+
+// Updated animate function
 function animate() {
-  const numSteps = 100;
-  const step = time.duration / numSteps;
-  let i = 0;
+  let elapsed = lastStep;
+  let lastTimestamp = performance.now();
   const altitudeDisplay = document.getElementById('altitude-display');  // Get the altitude display
+
   const animateStep = function (timestamp) {
-    const progress = Math.min((timestamp - start) / (step * 1000), 1);
+    // Calculate elapsed time based on speed
+    elapsed += (timestamp - lastTimestamp) * speed;
+    lastTimestamp = timestamp;
+    const progress = Math.min(elapsed / (time.duration * 1000), 1);
+
     control.value = progress * 100;
     const m = time.start + time.duration * progress;
+
     vectorSource.forEachFeature(function (feature) {
       const geometry = feature.getGeometry();
       const coordinate = geometry.getCoordinateAtM(m, true);
-      let highlight = feature.get("highlight");
+      let highlight = feature.get('highlight');
       if (highlight === undefined) {
         highlight = new Feature(new Point(coordinate));
-        feature.set("highlight", highlight);
+        feature.set('highlight', highlight);
         featureOverlay.getSource().addFeature(highlight);
       } else {
         highlight.getGeometry().setCoordinates(coordinate);
       }
+
       const seconds = new Date(coordinate[2] * 1000);
       const date = extractDate(reader.result);
       const info = document.getElementById("info");
@@ -391,17 +413,15 @@ function animate() {
       const altitude = parsedFlight.gpsAltitude[altitudeIndex];
       altitudeDisplay.innerHTML = "Nadmorská výška: " + altitude + " m";
     });
-    if (i % Math.floor(numSteps / 100) === 0 || progress === 1) {
-      map.render();
-    }
-    i++;
+
     if (progress < 1 && isPlaying) {
       animationFrameId = requestAnimationFrame(animateStep);
     } else {
-      lastStep = performance.now() - start;
+      lastStep = elapsed;
       isPlaying = false;
     }
   };
+
   animationFrameId = requestAnimationFrame(animateStep);
 }
 
@@ -788,4 +808,55 @@ function calculateTotalDistance(parsedFlight) {
 
 function deg2rad(deg) {
   return deg * (Math.PI / 180);
+}
+// graf
+let altitudeChart;
+
+function renderAltitudeGraph(parsedFlight) {
+  const altitudeCanvas = document.getElementById('altitudeGraph');
+  altitudeCanvas.style.backgroundColor = '#29323c';
+
+  const altitudeData = parsedFlight.gpsAltitude;
+  const timeData = parsedFlight.recordTime.map(time => `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}:${time.getSeconds().toString().padStart(2, '0')}`);
+
+  const newDataSet = {
+    label: 'Nadmorská výška',
+    data: altitudeData,
+    borderColor: 'rgb(230, 108, 32)', // Orange
+    backgroundColor: 'rgba(230, 108, 32, 0.1)', // Orange with transparency
+    borderWidth: 0.1,
+  };
+
+  if (altitudeChart) {
+    altitudeChart.data.labels = timeData;
+    altitudeChart.data.datasets = [newDataSet]; // Replace the datasets instead of pushing
+    altitudeChart.update();
+  } else {
+    altitudeChart = new Chart(altitudeCanvas, {
+      type: 'line',
+      data: {
+        labels: timeData,
+        datasets: [newDataSet],
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Čas',
+            },
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Nadmorská výška (m)',
+            },
+          },
+        },
+      },
+    });
+  }
 }
