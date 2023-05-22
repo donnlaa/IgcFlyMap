@@ -360,7 +360,7 @@ playButton.addEventListener("click", function () {
 
 
 // Global animation speed
-let speed = 1;
+let speed = 10;
 
 // Slower and faster buttons
 const slowerButton = document.getElementById('slower-button');
