@@ -931,6 +931,40 @@ a:hover h1 span {
 	color: rgb(230, 108, 32);
 }
 
+#faster-button {
+	padding: 10px 10px;
+	color: rgb(0, 0, 0);
+	border: none;
+	border-radius: 30px;
+	font-size: 1.4rem;
+	font-weight: 500;
+	text-transform: uppercase;
+	transition: 0.2s ease-out;
+	cursor: pointer;
+	margin-top: 5px;
+	position: absolute;
+	margin-left: 200px;
+	background-color: rgba(230, 108, 32, 0.6);
+	border: solid 2px rgb(230, 108, 32);
+}
+
+#slower-button {
+	padding: 10px 10px;
+	color: rgb(0, 0, 0);
+	border: none;
+	border-radius: 30px;
+	font-size: 1.4rem;
+	font-weight: 500;
+	text-transform: uppercase;
+	transition: 0.2s ease-out;
+	cursor: pointer;
+	margin-top: 5px;
+	position: absolute;
+	margin-left: 250px;
+	background-color: rgba(230, 108, 32, 0.6);
+	border: solid 2px rgb(230, 108, 32);
+}
+
 #savemap {
 	padding: 10px 24px;
 	color: rgb(0, 0, 0);
@@ -943,7 +977,7 @@ a:hover h1 span {
 	cursor: pointer;
 	margin-top: 5px;
 	position: absolute;
-	margin-left: 200px;
+	margin-left: 350px;
 	background-color: rgba(230, 108, 32, 0.6);
 	border: solid 2px rgb(230, 108, 32);
 	/* box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16); */

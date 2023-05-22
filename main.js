@@ -341,22 +341,29 @@ control.addEventListener('input', function () {
 });
 //tlačidlo na automatickú animáciu letu
 const playButton = document.getElementById("play-button");
+// Global variables
 let isPlaying = false;
-let start;
 let lastStep = 0;
+let lastTimestamp = null;
 let animationFrameId;
 
+// Event listener for playButton
 playButton.addEventListener("click", function () {
-  if (!isPlaying) {
-    playButton.textContent = "Pause Animation";
-    isPlaying = true;
-    animate();
+  isPlaying = !isPlaying;
+  playButton.textContent = isPlaying ? "Pause Animation" : "Play Animation";
+  
+  if (isPlaying) {
+    lastTimestamp = performance.now();  // Ensure lastTimestamp is current when we start
+    animate(lastTimestamp);
   } else {
-    playButton.textContent = "Play Animation";
-    isPlaying = false;
+    // Save lastStep as the total elapsed time when we pause
+    lastStep += (performance.now() - lastTimestamp) / 1000 * speed;
     cancelAnimationFrame(animationFrameId);
   }
 });
+
+
+
 
 
 // Global animation speed
@@ -377,19 +384,17 @@ fasterButton.addEventListener('click', function () {
 });
 
 // Updated animate function
-function animate() {
-  let elapsed = lastStep;
-  let lastTimestamp = performance.now();
-  const altitudeDisplay = document.getElementById('altitude-display');  // Get the altitude display
+// Updated animate function
+function animate(timestamp) {
+  let elapsed = lastStep + ((timestamp - lastTimestamp) / 1000) * speed; // Convert to seconds and multiply by speed
+  const altitudeDisplay = document.getElementById('altitude-display');
 
-  const animateStep = function (timestamp) {
-    // Calculate elapsed time based on speed
-    elapsed += (timestamp - lastTimestamp) * speed;
-    lastTimestamp = timestamp;
-    const progress = Math.min(elapsed / (time.duration * 1000), 1);
+  const animateStep = function () {
+    const progress = Math.min(elapsed / time.duration, 1);
 
-    control.value = progress * 100;
-    const m = time.start + time.duration * progress;
+
+      control.value = progress * 100;
+      const m = time.start + time.duration * progress;
 
     vectorSource.forEachFeature(function (feature) {
       const geometry = feature.getGeometry();
@@ -414,15 +419,18 @@ function animate() {
       altitudeDisplay.innerHTML = "Nadmorská výška: " + altitude + " m";
     });
 
-    if (progress < 1 && isPlaying) {
-      animationFrameId = requestAnimationFrame(animateStep);
-    } else {
+    if (progress < 1) {
       lastStep = elapsed;
+      lastTimestamp = timestamp; // Update lastTimestamp only if animation is in progress
+      animationFrameId = requestAnimationFrame(animate);
+    } else {
+      lastStep = 0;
       isPlaying = false;
+      playButton.textContent = "Play Animation";
     }
   };
 
-  animationFrameId = requestAnimationFrame(animateStep);
+  animateStep();
 }
 
 // text pod mapou co pise informacie o lete... 
