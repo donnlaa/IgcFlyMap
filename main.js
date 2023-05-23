@@ -11,10 +11,7 @@ import { getVectorContext } from 'ol/render';
 import { fromLonLat } from 'ol/proj';
 
 var parsedFlight;
-const colors = {
-  'Marek Kováč': 'rgba(0, 0, 255, 0.7)',
-  'Ryland Jordan': 'rgba(254, 0, 0, 0.8)',
-};
+
 
 const styleCache = {};
 
@@ -68,18 +65,15 @@ const fileInput = document.createElement("input");
 fileInput.setAttribute("type", "file");
 fileInput.setAttribute("multiple", ""); // Add this line to accept multiple files
 
-
 //add event listener to the button
 var importButton = document.getElementById("import-button");
 importButton.addEventListener("click", function () {
   fileInput.click();
 });
 
-
-
 // Define the processFiles function
 function processFiles(files) {
-  for (let i = 0; i < files.length; i++) {
+  for (let i = 0; i < files.length; i++) { // ak tahame viac suborov naraz
     const file = files[i];
     const fileReader = new FileReader();
 
@@ -121,15 +115,16 @@ function processFiles(files) {
   }
 }
 
-// Add event listener for file input
+//single file input
 fileInput.addEventListener("change", function () {
   const files = fileInput.files;
 
-  if (files.length === 1) {
+  if (files.length === 1) {  // ak tahame iba po jednom subory
     const file = files[0];
     reader.onload = function () {
       const data = reader.result;
       parsedFlight = parseIGC(data);
+      calculateSpeed(parsedFlight);
       console.log(parsedFlight);
       const features = igcFormat.readFeatures(data, {
         featureProjection: 'EPSG:3857',
@@ -234,7 +229,7 @@ let point = null;
 let line = null;
 
 
-
+// info pod mapou
 const displaySnap = function (coordinate) {
   const closestFeature = vectorSource.getClosestFeatureToCoordinate(coordinate);
   const info = document.getElementById('info');
@@ -351,7 +346,7 @@ let animationFrameId;
 playButton.addEventListener("click", function () {
   isPlaying = !isPlaying;
   playButton.textContent = isPlaying ? "Pause Animation" : "Play Animation";
-  
+
   if (isPlaying) {
     lastTimestamp = performance.now();  // Ensure lastTimestamp is current when we start
     animate(lastTimestamp);
@@ -388,13 +383,16 @@ fasterButton.addEventListener('click', function () {
 function animate(timestamp) {
   let elapsed = lastStep + ((timestamp - lastTimestamp) / 1000) * speed; // Convert to seconds and multiply by speed
   const altitudeDisplay = document.getElementById('altitude-display');
+  const horizontalSpeedDisplay = document.getElementById('horizontal-speed-display');
+  const verticalSpeedDisplay = document.getElementById('vertical-speed-display');
 
   const animateStep = function () {
     const progress = Math.min(elapsed / time.duration, 1);
+    const speedIndex = Math.floor(parsedFlight.horizontalSpeeds.length * progress);
 
 
-      control.value = progress * 100;
-      const m = time.start + time.duration * progress;
+    control.value = progress * 100;
+    const m = time.start + time.duration * progress;
 
     vectorSource.forEachFeature(function (feature) {
       const geometry = feature.getGeometry();
@@ -416,7 +414,26 @@ function animate(timestamp) {
       // Update the altitude display
       const altitudeIndex = Math.floor(parsedFlight.gpsAltitude.length * progress);
       const altitude = parsedFlight.gpsAltitude[altitudeIndex];
+      //...
+
+      const horizontalSpeed = parsedFlight.horizontalSpeeds[speedIndex];
+      const verticalSpeed = parsedFlight.verticalSpeeds[speedIndex];
       altitudeDisplay.innerHTML = "Nadmorská výška: " + altitude + " m";
+
+      if (horizontalSpeed) {
+        horizontalSpeedDisplay.innerHTML = "Horizontal Speed: " + horizontalSpeed.toFixed(2) + " km/h";
+      } else {
+        horizontalSpeedDisplay.innerHTML = "Horizontal Speed: -- km/h";
+      }
+
+      if (verticalSpeed) {
+        verticalSpeedDisplay.innerHTML = "Vertical Speed: " + verticalSpeed.toFixed(2) + " km/h";
+      } else {
+        verticalSpeedDisplay.innerHTML = "Vertical Speed: 0.00 km/h";
+      }
+
+      //...
+
     });
 
     if (progress < 1) {
@@ -433,16 +450,12 @@ function animate(timestamp) {
   animateStep();
 }
 
-// text pod mapou co pise informacie o lete... 
 function toTimeString(totalSeconds) { // funkcia na premenu sekund na normalny format casu
   const totalMs = totalSeconds * 1000;
   const result = new Date(totalMs).toISOString().slice(11, 19);
 
   return result;
 }
-// NIZSIE JE ZAS KOD PRE TABULKU VYPIS
-//add event listener for file input
-//add event listener for file input
 function extractDate(igcFile) {
 
   var dateRecord = igcFile.match(/H[FO]DTE(?:DATE:)?(\d{2})(\d{2})(\d{2}),?(\d{2})?/);
@@ -866,5 +879,43 @@ function renderAltitudeGraph(parsedFlight) {
         },
       },
     });
+  }
+}
+
+
+function parseTime(timeString) {
+  var hours = parseInt(timeString.substring(0, 2), 10);
+  var minutes = parseInt(timeString.substring(2, 4), 10);
+  var seconds = parseInt(timeString.substring(4, 6), 10);
+  return (hours * 3600) + (minutes * 60) + seconds;
+}
+
+function calculateSpeed(model) {
+  model.horizontalSpeeds = [];
+  model.verticalSpeeds = [];
+  var earthRadius = 6371;  // Radius of the Earth in kilometers
+
+  for (var i = 1; i < model.recordTime.length; i++) {
+    var prevLatLong = model.latLong[i - 1];
+    var currLatLong = model.latLong[i];
+
+    // Use Haversine formula to calculate the distance between two points on the sphere
+    var dLat = (currLatLong[0] - prevLatLong[0]) * Math.PI / 180;
+    var dLon = (currLatLong[1] - prevLatLong[1]) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(prevLatLong[0] * Math.PI / 180) * Math.cos(currLatLong[0] * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var distance = earthRadius * c;  // Distance in kilometers
+
+    var deltaTime = (model.recordTime[i] - model.recordTime[i - 1]) / 1000;  // Time difference in seconds
+    var horizontalSpeed = distance / deltaTime * 3600;  // Speed in km/h
+
+    var prevAltitude = model.pressureAltitude[i - 1];
+    var currAltitude = model.pressureAltitude[i];
+    var verticalSpeed = (currAltitude - prevAltitude) / deltaTime * 3.6;  // Speed in km/h
+
+    model.horizontalSpeeds.push(horizontalSpeed);
+    model.verticalSpeeds.push(verticalSpeed);
   }
 }

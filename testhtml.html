@@ -50,25 +50,29 @@
         <div id="cesiumContainer"></div>
         <div id="loading">
             <div class="spinner"></div>
-            <div>Loading your flight</div>
+            <div>
+                <span data-lang="en">Loading your flight</span>
+                <span data-lang="sk">Načítavanie letu</span>
+            </div>
         </div>
         <div id="pilot-name" class="pilot-name"></div>
         <div id="altitude" class="altitude"></div>
         <div id="pilot-name"></div>
-
+        <div id="horizontal-speed"></div>
+        <div id="vertical-speed"></div>
 
         <div>
             <input type="file" id="file-input" onchange="parseFile(); changeId();" style="display:none;">
-            <label for="file-input" id="play-button" class="tlacidlo" style="padding: 8px 20px; position: relative;">1.
-                Import file</label>
-
-
-
-            <button class="tlacidlo" id="play-button" onclick="return false;" style=" position: relative;">
+            <label for="file-input" id="play-button" class="tlacidlo" style="padding: 8px 20px; position: relative;">
+                <span data-lang="en">Import file</span>
+                <span data-lang="sk">Vložiť súbor</span></label>
+            <button class="tlacidlo" id="play-button" onclick="return false;" style=" position: relative; opacity: 0;">
                 You need igc</button>
-            <button class="savemap" id="play-animation"><i class="fa fa-play"></i> Play Animation</button>
-
-
+            <button class="savemap" id="play-animation"><i class="fa fa-play"></i>
+                <span data-lang="en">Animation</span>
+                <span data-lang="sk">Animácia letu</span></button>
+            <button id="fastbutton" onclick="speedUp()"><i class="fa fa-forward"></i></button>
+            <button id="slowbutton" onclick="slowDown()"><i class="fa fa-backward"></i></button>
         </div>
     </div>
     <div class="containerGraph">
@@ -77,7 +81,6 @@
 
 </body>
 <script>
-
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNWRhMmYzMi03NzJmLTQzMWQtOTBjNC0xNDExZGVhOWRlZGEiLCJpZCI6MTI2MTY1LCJpYXQiOjE2NzcyMzgwMjV9.zVLhACU4c_P9pOaoDOOTPxb1ywhgiIL_rPS9SL54e8w';
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
@@ -88,8 +91,7 @@
 
     viewer.terrainProvider = Cesium.createWorldTerrain();
 
-    // pozicie z lat a long
-
+    // loading suborov - tocenie pri loadingu
     function changeId() {
         document.getElementById("loading").id = "loadingNone";
     }
@@ -104,6 +106,9 @@
         this.message = message;
         this.name = "IGCException";
     }
+
+    var parsedFlight = null;
+
     function parseFile() {
         'use strict';
 
@@ -114,7 +119,8 @@
         reader.onload = function (e) {
             try {
                 var igcFile = e.target.result;
-                var parsedFlight = parseIGC(igcFile);
+                parsedFlight = parseIGC(igcFile); // Update parsedFlight here
+                calculateSpeed(parsedFlight);
                 console.log(parsedFlight);
 
                 showTrack(parsedFlight);
@@ -130,19 +136,13 @@
                 console.log(error);
             }
         };
-
-
         reader.onerror = function (e) {
             console.log(e);
         };
-
         reader.readAsText(file);
-
-
     }
     function parseIGC(igcFile) {
         'use strict';
-
 
         function parseManufacturer(aRecord) {
             var manufacturers = {
@@ -230,8 +230,6 @@
                 }
             }
         }
-
-
         function parseLatLong(latLongString) {
             var latitude = parseFloat(latLongString.substring(0, 2)) +
                 parseFloat(latLongString.substring(2, 7)) / 60000.0;
@@ -364,7 +362,7 @@
             position: positions[0],
             point: {
                 pixelSize: 10,
-                color: Cesium.Color.YELLOW,
+                color: Cesium.Color.GREEN,
             },
         });
 
@@ -383,8 +381,8 @@
             startPoint: startPoint,
             endPoint: endPoint,
         };
-        var altitudeIndex = 0; // Create an index to track the current altitude during the flight
-        var altitudeDisplay = document.getElementById("altitude"); // Assuming you have an HTML element with id "altitude"
+        var altitudeIndex = 0; // index na trackovanie current výšky
+        var altitudeDisplay = document.getElementById("altitude");
 
         var pilotName = parsedFlight.headers.find(header => header.name === "Pilot");
         var gliderName = parsedFlight.headers.find(header => header.name === "Glider type");
@@ -446,42 +444,72 @@
     }
 
     // animacia letu
+    var timerId;
+    var isPlaying = false;
+    var currentPositionIndex = 0;
+    var movingDot = null;
+    var interval = 100; // štartovacia rýchlosť
+
     function playAnimation(parsedFlight) {
         var flightPath = parsedFlight.latLong;
         var totalPositions = flightPath.length;
-        var animationDuration = 10000; // 10 seconds
-        var interval = animationDuration / totalPositions;
+        var button = document.getElementById('play-animation');
 
-        var movingDot = viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(flightPath[0][1], flightPath[0][0], parsedFlight.gpsAltitude[0]),
-            billboard: {
-                image: '/assets/glider.png', // Add your image url here
-                width: 32, // These numbers are just placeholders
-                height: 32, // Adjust as needed for your specific icon
-            },
-        });
+        if (isPlaying) {
+            clearTimeout(timerId);
+            isPlaying = false;
+            button.innerText = 'Play';
+            return;
+        }
 
-
-        var currentPositionIndex = 0;
-        var altitudeDisplay = document.getElementById("altitude"); // Get the altitude display
+        if (!movingDot) {
+            movingDot = viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(flightPath[currentPositionIndex][1], flightPath[currentPositionIndex][0], parsedFlight.gpsAltitude[currentPositionIndex]),
+                billboard: {
+                    image: '/assets/glider.png', // Add your image url here
+                    // image: '/img/glider.png', // Add your image url here
+                    width: 32, // These numbers are just placeholders
+                    height: 32, // Adjust as needed for your specific icon
+                },
+            });
+        }
+        var horizontalSpeedDisplay = document.getElementById("horizontal-speed");
+        var verticalSpeedDisplay = document.getElementById("vertical-speed");
+        var altitudeDisplay = document.getElementById("altitude");
 
         function updateDotPosition() {
             if (currentPositionIndex >= totalPositions) {
-                clearInterval(animationInterval);
+                clearTimeout(timerId);
+                isPlaying = false;
+                button.innerText = 'Play';
                 return;
             }
-
+            var horizontalSpeed = parsedFlight.horizontalSpeeds[currentPositionIndex];
+            var verticalSpeed = parsedFlight.verticalSpeeds[currentPositionIndex];
             var latLong = flightPath[currentPositionIndex];
             var altitude = parsedFlight.gpsAltitude[currentPositionIndex];
             movingDot.position = Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
 
             // Update the altitude display
             altitudeDisplay.innerText = "Altitude: " + altitude + " m";
-
+            horizontalSpeedDisplay.innerText = "Horizontal Speed: " + horizontalSpeed.toFixed(2) + " km/h";
+            verticalSpeedDisplay.innerText = "Vertical Speed: " + verticalSpeed.toFixed(2) + " km/h";
             currentPositionIndex++;
+            timerId = setTimeout(updateDotPosition, interval); // rekurzivne volanie funkcie
         }
 
-        var animationInterval = setInterval(updateDotPosition, interval);
+        // Start the animation
+        updateDotPosition();
+        isPlaying = true;
+        button.innerText = 'Pause';
+    }
+
+    function speedUp() {
+        interval /= 4;
+    }
+
+    function slowDown() {
+        interval *= 4;
     }
 
     // jazyk
@@ -511,6 +539,36 @@
         aboutLink.href = aboutLink.getAttribute('data-lang-href-' + lang);
 
         currentLang = lang; // Update the current language
+    }
+
+    function calculateSpeed(model) {
+        model.horizontalSpeeds = [];
+        model.verticalSpeeds = [];
+        var earthRadius = 6371;  // Radius of the Earth in kilometers
+
+        for (var i = 1; i < model.recordTime.length; i++) {
+            var prevLatLong = model.latLong[i - 1];
+            var currLatLong = model.latLong[i];
+
+            // Use Haversine formula to calculate the distance between two points on the sphere
+            var dLat = (currLatLong[0] - prevLatLong[0]) * Math.PI / 180;
+            var dLon = (currLatLong[1] - prevLatLong[1]) * Math.PI / 180;
+            var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(prevLatLong[0] * Math.PI / 180) * Math.cos(currLatLong[0] * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            var distance = earthRadius * c;  // Distance in kilometers
+
+            var deltaTime = (model.recordTime[i] - model.recordTime[i - 1]) / 1000;  // Time difference in seconds
+            var horizontalSpeed = distance / deltaTime * 3600;  // Speed in km/h
+
+            var prevAltitude = model.pressureAltitude[i - 1];
+            var currAltitude = model.pressureAltitude[i];
+            var verticalSpeed = (currAltitude - prevAltitude) / deltaTime * 3.6;  // Speed in km/h
+
+            model.horizontalSpeeds.push(horizontalSpeed);
+            model.verticalSpeeds.push(verticalSpeed);
+        }
     }
 </script>
 
