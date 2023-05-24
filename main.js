@@ -28,7 +28,8 @@ const styleFunction = function (feature) {
     });
 
     const stroke2 = new Stroke({
-      color: 'rgb(230, 108, 32)', // White with 50% transparency
+      //color: 'rgb(230, 108, 32)', 
+      color: getRandomColor(),
       width: 2,
     });
 
@@ -63,7 +64,7 @@ let reader = new FileReader();
 //tlacidlo na vlozenie
 const fileInput = document.createElement("input");
 fileInput.setAttribute("type", "file");
-fileInput.setAttribute("multiple", ""); // Add this line to accept multiple files
+//fileInput.setAttribute("multiple", ""); // Add this line to accept multiple files
 
 //add event listener to the button
 var importButton = document.getElementById("import-button");
@@ -247,7 +248,7 @@ const displaySnap = function (coordinate) {
     }
     const seconds = new Date(closestPoint[2] * 1000);
     const date = extractDate(reader.result); // Call extractDate function with file content
-    const imgSrc = './img/pilot_icon.png'; // Replace with the actual path to the image
+    const imgSrc = '/assets/pilot_icon.png'; // Replace with the actual path to the image
     info.innerHTML =
       '<img src="' + imgSrc + '" alt="Image1" style="vertical-align: middle; width: 30px; height: 30px;"> ' +
       closestFeature.get('PLT') + ' (' + date.toDateString() + ')' + ' ' + seconds.toTimeString();
@@ -379,7 +380,6 @@ fasterButton.addEventListener('click', function () {
 });
 
 // Updated animate function
-// Updated animate function
 function animate(timestamp) {
   let elapsed = lastStep + ((timestamp - lastTimestamp) / 1000) * speed; // Convert to seconds and multiply by speed
   const altitudeDisplay = document.getElementById('altitude-display');
@@ -414,7 +414,6 @@ function animate(timestamp) {
       // Update the altitude display
       const altitudeIndex = Math.floor(parsedFlight.gpsAltitude.length * progress);
       const altitude = parsedFlight.gpsAltitude[altitudeIndex];
-      //...
 
       const horizontalSpeed = parsedFlight.horizontalSpeeds[speedIndex];
       const verticalSpeed = parsedFlight.verticalSpeeds[speedIndex];
@@ -432,7 +431,6 @@ function animate(timestamp) {
         verticalSpeedDisplay.innerHTML = "Vertical Speed: 0.00 km/h";
       }
 
-      //...
 
     });
 

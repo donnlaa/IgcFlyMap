@@ -1,1 +1,0 @@
-import Feature from 'ol/Feature';
