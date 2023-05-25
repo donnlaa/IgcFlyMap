@@ -454,7 +454,8 @@
         var flightPath = parsedFlight.latLong;
         var totalPositions = flightPath.length;
         var button = document.getElementById('play-animation');
-
+        currentPositionIndex = 0;
+        movingDot = null;
         if (isPlaying) {
             clearTimeout(timerId);
             isPlaying = false;
@@ -491,9 +492,18 @@
             movingDot.position = Cesium.Cartesian3.fromDegrees(latLong[1], latLong[0], altitude);
 
             // Update the altitude display
-            altitudeDisplay.innerText = "Altitude: " + altitude + " m";
-            horizontalSpeedDisplay.innerText = "Horizontal Speed: " + horizontalSpeed.toFixed(2) + " km/h";
-            verticalSpeedDisplay.innerText = "Vertical Speed: " + verticalSpeed.toFixed(2) + " km/h";
+            altitudeDisplay.innerText = currentLang === 'sk'
+                ? "Nadmorská výška: " + altitude + " m"
+                : "Altitude: " + altitude + " m";
+
+            horizontalSpeedDisplay.innerText = currentLang === 'sk'
+                ? "Horizontálna rýchlosť: " + horizontalSpeed.toFixed(2) + " km/h"
+                : "Horizontal Speed: " + horizontalSpeed.toFixed(2) + " km/h";
+
+            verticalSpeedDisplay.innerText = currentLang === 'sk'
+                ? "Vertikálna rýchlosť: " + verticalSpeed.toFixed(2) + " km/h"
+                : "Vertical Speed: " + verticalSpeed.toFixed(2) + " km/h";
+
             currentPositionIndex++;
             timerId = setTimeout(updateDotPosition, interval); // rekurzivne volanie funkcie
         }

@@ -88,7 +88,7 @@ fileInput.addEventListener("change", function () {
       calculateSpeed(parsedFlight);
       lastStep = 0;
       lastTimestamp = null;
-      speed = 10; 
+      speed = 10;
       console.log(parsedFlight);
       const features = igcFormat.readFeatures(data, {
         featureProjection: 'EPSG:3857',
@@ -110,7 +110,10 @@ fileInput.addEventListener("change", function () {
         const pilotNameDisplay = document.getElementById('pilot-name-display');
         pilotNameDisplay.innerHTML = 'Pilot: ' + feature.get('PLT');
         const altitudeDisplay = document.getElementById('altitude-display');
-        altitudeDisplay.innerHTML = "Nadmorská výška: " + parsedFlight.gpsAltitude[altitudeIndex] + " m";
+        altitudeDisplay.innerHTML = currentLang === 'sk'
+          ? "Nadmorská výška: " + parsedFlight.gpsAltitude[altitudeIndex] + " m"
+          : "Altitude: " + parsedFlight.gpsAltitude[altitudeIndex] + " m";
+
 
         const table = document.getElementById("flight-table");
         const row = table.insertRow();
@@ -125,7 +128,7 @@ fileInput.addEventListener("change", function () {
       });
     };
     reader.readAsText(file);
-  } 
+  }
 });
 
 
@@ -307,7 +310,10 @@ let animationFrameId;
 // Event listener for playButton
 playButton.addEventListener("click", function () {
   isPlaying = !isPlaying;
-  playButton.textContent = isPlaying ? "Pause Animation" : "Play Animation";
+  playButton.textContent = isPlaying
+    ? (currentLang === 'sk' ? "Zastaviť" : "Pause Animation")
+    : (currentLang === 'sk' ? "Spustiť" : "Play Animation");
+
 
   if (isPlaying) {
     lastTimestamp = performance.now();  // Ensure lastTimestamp is current when we start
@@ -337,7 +343,7 @@ fasterButton.addEventListener('click', function () {
 
 // Updated animate function
 function animate(timestamp) {
-   // Convert to seconds and multiply by speed
+  // Convert to seconds and multiply by speed
   const altitudeDisplay = document.getElementById('altitude-display');
   const horizontalSpeedDisplay = document.getElementById('horizontal-speed-display');
   const verticalSpeedDisplay = document.getElementById('vertical-speed-display');
@@ -345,14 +351,14 @@ function animate(timestamp) {
   const animateStep = function () {
     const elapsed = lastStep + ((timestamp - lastTimestamp) / 1000) * speed;
     const progress = Math.min(elapsed / time.duration, 1);
-    console.log(elapsed,time.duration);
+    console.log(elapsed, time.duration);
     const speedIndex = Math.floor(parsedFlight.horizontalSpeeds.length * progress);
 
 
     control.value = progress * 100;
     const m = time.start + time.duration * progress;
 
-    vectorSource.forEachFeature(function (feature) { 
+    vectorSource.forEachFeature(function (feature) {
       const geometry = feature.getGeometry();
       const coordinate = geometry.getCoordinateAtM(m, true);
       let highlight = feature.get('highlight');
@@ -373,24 +379,32 @@ function animate(timestamp) {
       info.innerHTML = feature.get("PLT") + " (" + date.toDateString() + ") " + seconds.toTimeString();
 
       // Update the altitude display
-      
-      altitudeDisplay.innerHTML = "Nadmorská výška: " + altitude + " m";
 
-      if (horizontalSpeed) {
-        console.log(speedIndex,progress,lastStep,elapsed)
-        horizontalSpeedDisplay.innerHTML = "Horizontal Speed: " + horizontalSpeed.toFixed(2) + " km/h";
-      } else {
-        console.log(speedIndex,progress,lastStep,elapsed)
-        horizontalSpeedDisplay.innerHTML = "Horizontal Speed: -- km/h";
-      }
-
-      if (verticalSpeed) {
-        verticalSpeedDisplay.innerHTML = "Vertical Speed: " + verticalSpeed.toFixed(2) + " km/h";
-      } else {
-        verticalSpeedDisplay.innerHTML = "Vertical Speed: 0.00 km/h";
-      }
+      altitudeDisplay.innerHTML = currentLang === 'sk'
+        ? "Nadmorská výška: " + altitude + " m"
+        : "Altitude: " + altitude + " m";
 
 
+        if (horizontalSpeed) {
+          horizontalSpeedDisplay.innerHTML = currentLang === 'sk'
+            ? "Horizontálna rýchlosť: " + horizontalSpeed.toFixed(2) + " km/h"
+            : "Horizontal Speed: " + horizontalSpeed.toFixed(2) + " km/h";
+        } else {
+          horizontalSpeedDisplay.innerHTML = currentLang === 'sk'
+            ? "Horizontálna rýchlosť: -- km/h"
+            : "Horizontal Speed: -- km/h";
+        }
+        
+        if (verticalSpeed) {
+          verticalSpeedDisplay.innerHTML = currentLang === 'sk'
+            ? "Vertikálna rýchlosť: " + verticalSpeed.toFixed(2) + " km/h"
+            : "Vertical Speed: " + verticalSpeed.toFixed(2) + " km/h";
+        } else {
+          verticalSpeedDisplay.innerHTML = currentLang === 'sk'
+            ? "Vertikálna rýchlosť: 0.00 km/h"
+            : "Vertical Speed: 0.00 km/h";
+        }
+  
     });
 
     if (progress < 1) {
