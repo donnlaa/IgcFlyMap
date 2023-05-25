@@ -72,19 +72,23 @@ importButton.addEventListener("click", function () {
   fileInput.click();
 });
 
-// Define the processFiles function
 
 
 //single file input
 fileInput.addEventListener("change", function () {
+  time.start = Infinity;
+  time.stop = -Infinity;
+  time.duration = 0;
   const files = fileInput.files;
-
   if (files.length === 1) {  // ak tahame iba po jednom subory
     const file = files[0];
     reader.onload = function () {
       const data = reader.result;
       parsedFlight = parseIGC(data);
       calculateSpeed(parsedFlight);
+      lastStep = 0;
+      lastTimestamp = null;
+      speed = 10; 
       console.log(parsedFlight);
       const features = igcFormat.readFeatures(data, {
         featureProjection: 'EPSG:3857',
@@ -333,20 +337,22 @@ fasterButton.addEventListener('click', function () {
 
 // Updated animate function
 function animate(timestamp) {
-  let elapsed = lastStep + ((timestamp - lastTimestamp) / 1000) * speed; // Convert to seconds and multiply by speed
+   // Convert to seconds and multiply by speed
   const altitudeDisplay = document.getElementById('altitude-display');
   const horizontalSpeedDisplay = document.getElementById('horizontal-speed-display');
   const verticalSpeedDisplay = document.getElementById('vertical-speed-display');
 
   const animateStep = function () {
+    const elapsed = lastStep + ((timestamp - lastTimestamp) / 1000) * speed;
     const progress = Math.min(elapsed / time.duration, 1);
+    console.log(elapsed,time.duration);
     const speedIndex = Math.floor(parsedFlight.horizontalSpeeds.length * progress);
 
 
     control.value = progress * 100;
     const m = time.start + time.duration * progress;
 
-    vectorSource.forEachFeature(function (feature) {
+    vectorSource.forEachFeature(function (feature) { 
       const geometry = feature.getGeometry();
       const coordinate = geometry.getCoordinateAtM(m, true);
       let highlight = feature.get('highlight');
@@ -357,23 +363,24 @@ function animate(timestamp) {
       } else {
         highlight.getGeometry().setCoordinates(coordinate);
       }
-
+      const altitudeIndex = Math.floor(parsedFlight.gpsAltitude.length * progress);
+      const altitude = parsedFlight.gpsAltitude[altitudeIndex];
+      const horizontalSpeed = parsedFlight.horizontalSpeeds[speedIndex];
+      const verticalSpeed = parsedFlight.verticalSpeeds[speedIndex];
       const seconds = new Date(coordinate[2] * 1000);
       const date = extractDate(reader.result);
       const info = document.getElementById("info");
       info.innerHTML = feature.get("PLT") + " (" + date.toDateString() + ") " + seconds.toTimeString();
 
       // Update the altitude display
-      const altitudeIndex = Math.floor(parsedFlight.gpsAltitude.length * progress);
-      const altitude = parsedFlight.gpsAltitude[altitudeIndex];
-
-      const horizontalSpeed = parsedFlight.horizontalSpeeds[speedIndex];
-      const verticalSpeed = parsedFlight.verticalSpeeds[speedIndex];
+      
       altitudeDisplay.innerHTML = "Nadmorská výška: " + altitude + " m";
 
       if (horizontalSpeed) {
+        console.log(speedIndex,progress,lastStep,elapsed)
         horizontalSpeedDisplay.innerHTML = "Horizontal Speed: " + horizontalSpeed.toFixed(2) + " km/h";
       } else {
+        console.log(speedIndex,progress,lastStep,elapsed)
         horizontalSpeedDisplay.innerHTML = "Horizontal Speed: -- km/h";
       }
 
@@ -530,12 +537,6 @@ function switchLanguage(lang) {
 
   currentLang = lang; // Update the current language
 }
-
-
-
-
-
-
 
 
 
