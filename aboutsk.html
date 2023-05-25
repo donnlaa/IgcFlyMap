@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>IgcToPdfMapper</title>
+    <link rel="stylesheet" href="node_modules/ol/ol.css">
+    <link rel="stylesheet" href="./style2.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <section id="header" style="background-color: transparent;">
+        <div class="header container">
+            <div class="nav-bar">
+                <div class="brand">
+                    <a href="./index.html">
+                        <h1><span>Igc</span><span class="span2"></span>Fly<span>Map</span><img src="./img/icon_logo.png"
+                                class="logo_icon" alt="logo"></h1>
+                    </a>
+                </div>
+                <div class="nav-list">
+                    <div class="hamburger">
+                        <div class="bar"></div>
+                    </div>
+                    <ul>
+                        <li><a href="./index.html" data-after="Mapa">2D</a></li>
+                        <li><a href="./index.html" data-after="Vložiť záznam">Vložiť igc</a></li>
+                        <li><a href="./3D.html" data-after="3D zobrazenie">3D</a></li>
+                        <li><a href="./aboutsk.html" data-after="About">O aplikácii</a></li>
+                        <li><a href="./about.html"><button
+                                    id="language-switcher_sk">🇬🇧<strong>ENG</strong></button></a></li>
+                        <li><a href="./aboutsk.html"><button
+                                    id="language-switcher_sk">🇸🇰<strong>SK</strong></button></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="main">
+        <div class="main container">
+            <div>
+                <h1>Pozrite si svoj letový záznam na interaktívnej<span></span></h1>
+                <h1>Mape<span></span></h1>
+                <p style="color:white">Táto aplikácia vychádza z bakalárskej práce Viktora Vince z roku 2019. Výsledkom
+                    je webová aplikácia, ktorú vypracoval študent Technickej
+                    univerzity v Košiciach - Ladislav Dono. <br>
+                    <br>
+                    <strong>Použité technológie:</strong><br>
+                    Knižnica OpenLayers na 2D vizualizáciu letov<br>
+                    Knižnica Cesium na 3D vizualizáciu letov<br>
+                    Knižnica Chart.js na vytvorenie grafu výškového profilu<br>
+                    <strong>Podporované prehliadače:</strong> Google Chrome, Microsoft Edge, Safari, Mozilla Firefox<br><br>
+                    Celý projekt je možné nájsť na stránke https://git.kpi.fei.tuke.sk/ladislav.dono/bp-app <br>
+                    <b>©2023 KPI FEI TUKE</b>
+                </p>
+                <a href="./index.html" type="button" class="cta">Vložiť IGC súbor</a>
+            </div>
+        </div>
+    </section>
+    <!-- koniec main  -->
+
+    <!-- Service sekcia -->
+    <section id="services">
+        <div class="services container">
+            <div class="service-top">
+                <h1 class="section-title">Ako to funguje?</h1>
+                <p>Piloti paraglidingu môžu celý svoj let zaznamenať pomocou jednoduchého zariadenia. Tento záznam sa
+                    uloží ako súbor IGC, ktorý môžete jednoducho vložiť do systému prostredníctvom našej webovej stránky
+                    a my vám vygenerujeme interaktívnu mapu, na ktorej uvidíte celý priebeh letu v 2D a 3D zobrazení.
+                </p>
+                </br>
+                </br>
+                <hr>
+            </div>
+
+            </br>
+            <h1 class="section-title">Čo<span>ponúkame</span></h1>
+            <div class="service-bottom">
+                <div class="service-item">
+                    <div class="icon"><img src="./img/icon.png" /></div>
+                    <h2>2D zobrazenie</h2>
+                    <p>Možnosť zobraziť si záznam letu v 2D podobe na našej interaktívnej mape. Všetko, čo potrebujete,
+                        je súbor IGC letu, ktorý môžete nahrať do systému.
+                    </p>
+                </div>
+                <div class="service-item">
+                    <div class="icon"><img src="./img/icon.png" /></div>
+                    <h2>3D zobrazenie</h2>
+                    <p>Zábery si môžete pozrieť aj v 3D na interaktívnej mape. Na nahratie do systému budete potrebovať
+                        iba súbor IGC z vášho letu.</p>
+                </div>
+                <div class="service-item">
+                    <div class="icon"><img src="./img/icon.png" /></div>
+                    <h2>Animácia</h2>
+                    <p>Ponúkame aj možnosť zobraziť animáciu letu na interaktívnej mape. Na prehratie animácie stačí
+                        poskytnúť súbor IGC z vášho letu.</p>
+                </div>
+                <div class="service-item">
+                    <div class="icon"><img src="./img/icon.png" /></div>
+                    <h2>Uloženie mapy</h2>
+                    <p>Mapu z letu môžete jednoducho uložiť ako súbor .png. Stačí importovať let a kliknúť na tlačidlo
+                        <i>Uložiť mapu</i>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Footer -->
+    <section id="footer">
+        <div class="footer container">
+            <div class="brand">
+                <h1>IgcFlyMap</h1>
+            </div>
+            <h2>Jednoduché a ľahké zobrazenie letových údajov</h2>
+            <p><b>©2023 KPI FEI TUKE</b></p>
+
+
+        </div>
+    </section>
+    <!-- End Footer -->
+    <script src="./app.js"></script>
+</body>
+
+</html>

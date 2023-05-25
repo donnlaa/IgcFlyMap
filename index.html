@@ -1,26 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>IgcToPdfOffline</title>
-    <link rel="stylesheet" href="node_modules/ol/ol.css">
-    <link rel="stylesheet" href="./style2.css">
-  </head>
-  <style>
-    .map {
-      width: 100%;
-      height: 600px;
-      border: rgb(172, 172, 172) 2px solid;
-      }
-  </style>
-  <body>
-    <!-- Header -->
+
+<head>
+  <meta charset="UTF-8">
+  <title>IgcFlyMap</title>
+  <link rel="stylesheet" href="node_modules/ol/ol.css">
+  <link rel="stylesheet" href="./style2.css">
+  <script src="https://kit.fontawesome.com/7e2e637b3b.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+</head>
+<style>
+  .map {
+    width: 100%;
+    height: 600px;
+    border: #606c7b 2px solid;
+  }
+</style>
+
+<body>
+  <!-- Header -->
   <section id="header">
     <div class="header container">
       <div class="nav-bar">
         <div class="brand">
           <a href="./index.html">
-            <h1>IgcToPdfOffline</h1>
+            <h1><span>Igc</span><span class="span2"></span>Fly<span>Map</span><img src="./img/icon_logo.png"
+                class="logo_icon" alt="logo"></h1>
           </a>
         </div>
         <div class="nav-list">
@@ -28,59 +33,99 @@
             <div class="bar"></div>
           </div>
           <ul>
-            <li><a href="./index.html" data-after="Mapa">2D</a></li>
-            <li><a href="./zaznam.html" data-after="Vložiť záznam">Vložiť záznam</a></li>
-            <li><a href="./testhtml.html" data-after="3D zobrazenie">3D</a></li>
+            <li><a href="#" data-after="Mapa">2D</a></li>
+            <li><a href="./3D.html" data-after="3D zobrazenie">3D</a></li>
+            <li>
+              <a id="about-link" data-lang-href-en="./about.html" data-lang-href-sk="./aboutsk.html">
+                <span data-lang="en" style="color: inherit;">About</span>
+                <span data-lang="sk" style="color: inherit;">O aplikácii</span>
+              </a>
+            </li>
+
             <button id="language-switcher_en">🇬🇧<strong>ENG</strong></button>
-        <button id="language-switcher_sk">🇸🇰<strong>SK</strong></button>
+            <button id="language-switcher_sk">🇸🇰<strong>SK</strong></button>
           </ul>
         </div>
       </div>
     </div>
   </section>
   <!-- End Header -->
-  
+
   <div id="containerall">
     <div class="flex-container">
       <div id="containerigc">
+        <div id="pilot-name-display" class="pilot-name2D"></div>
+        <div id="altitude-display" class="altitude2D"></div>
+        <div id="horizontal-speed-display"></div>
+        <div id="vertical-speed-display"></div>
+
         <div id="map" class="map"></div>
         <input id="time" type="range" value="0" steps="1" />
         <div id="info">&nbsp;</div>
-        <button id="play-button">Play</button>
+        <button id="import-button">
+          <i class="fa fa-upload"></i>
+          <span data-lang="en">Import file</span>
+          <span data-lang="sk">Vložiť súbor</span>
+        </button>
+        <input id="file-input" type="file" style="display:none">
+        <button id="play-button">
+          <i class="fa fa-play"></i>
+          <span data-lang="en">Animation</span>
+          <span data-lang="sk">Animácia letu</span>
+        </button>
+        <button id="faster-button"><i class="fa fa-forward"></i></button>
+        <button id="slower-button"><i class="fa fa-backward"></i></button>
 
+        <button id="savemap">
+          <i class="fa fa-download"></i>
+          <span data-lang="en">Save Map</span>
+          <span data-lang="sk">Uložiť mapu</span>
+        </button>
       </div>
       <div id="containertab">
-        <button id="import-button">Vložiť</button>
         <table id="flight-table">
           <tr>
-            <th>Pilot</th>
-            <th>Glider</th>
-            <th>Dĺžka letu</th>
-            <th>km</th>
+            <th><span data-lang="en">Pilot</span><span data-lang="sk">Pilot</span></th>
+            <th><span data-lang="en">Glider</span><span data-lang="sk">Glider</span></th>
+            <th><span data-lang="en">Flight duration</span><span data-lang="sk">Trvanie letu</span></th>
+            <th><span data-lang="en">km</span><span data-lang="sk">km</span></th>
+
           </tr>
         </table>
-      </div>
-    </div>
-  </div>
-  <table id="table"></table>
 
-    <!-- Footer -->
-    <section id="footer">
-      <div class="footer container">
-        <div class="brand">
-          <h1>IgcToPdfOffline</h1>
+        <div class="containerGraph2">
+          <canvas id="altitudeGraph"></canvas>
         </div>
-        <h2>Zobrazte dáta letu ľahko a jednoducho</h2>
-        <p>Copyright © 2023 IgcToPdfOffline</p>
-        
-
       </div>
-    </section>
-    <!-- End Footer -->
-   
-    <script src="https://unpkg.com/elm-pep@1.0.6/dist/elm-pep.js"></script>
-    <script type="module" src="/main.js"></script>
-    
-    
-  </body>
+
+
+
+    </div>
+
+  </div>
+
+
+  <!-- Footer -->
+  <section id="footer">
+    <div class="footer container">
+      <div class="brand">
+        <h1>IgcFlyMap</h1>
+      </div>
+      <h2>
+        <span data-lang="en">Display flight data easily and simply</span>
+        <span data-lang="sk">Jednoduché a ľahké zobrazenie letových údajov</span>
+      </h2>
+
+      <p><b>©2023 KPI FEI TUKE</b></p>
+
+
+    </div>
+  </section>
+  <!-- End Footer -->
+  <script src="https://unpkg.com/elm-pep@1.0.6/dist/elm-pep.js"></script>
+  <script type="module" src="/main.js"></script>
+
+
+</body>
+
 </html>
