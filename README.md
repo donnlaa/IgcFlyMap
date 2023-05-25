@@ -8,3 +8,10 @@ Knižnica Chart.js na vytvorenie grafu výškového profilu
 Podporované prehliadače: Google Chrome, Microsoft Edge, Safari, Mozilla Firefox
 
 ©2023 KPI FEI TUKE
+
+
+pre spustenie použite príkaz:
+
+npm install
+
+npm start
