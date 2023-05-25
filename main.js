@@ -73,48 +73,7 @@ importButton.addEventListener("click", function () {
 });
 
 // Define the processFiles function
-function processFiles(files) {
-  for (let i = 0; i < files.length; i++) { // ak tahame viac suborov naraz
-    const file = files[i];
-    const fileReader = new FileReader();
 
-    fileReader.onload = function () {
-
-      const data = fileReader.result;
-      parsedFlight = parseIGC(data);
-      const features = igcFormat.readFeatures(data, {
-        featureProjection: 'EPSG:3857',
-      });
-      vectorSource.addFeatures(features);
-
-      features.forEach(function (feature) {
-        const pilotName = feature.get('PLT');
-        const gliderName = feature.get('GTY');
-        const kilometers = calculateTotalDistance(parsedFlight);
-        const startTime = feature.getGeometry().getFirstCoordinate()[2];
-        const stopTime = feature.getGeometry().getLastCoordinate()[2];
-        const durationSeconds = stopTime - startTime;
-        const durationHours = Math.floor(durationSeconds / 3600);
-        const durationMinutes = Math.floor((durationSeconds % 3600) / 60);
-        const durationString = durationHours.toString().padStart(2, '0') + ':' + durationMinutes.toString().padStart(2, '0') + ':' + (durationSeconds % 60).toString().padStart(2, '0');
-
-
-        const table = document.getElementById("flight-table");
-        const row = table.insertRow();
-        const pilotCell = row.insertCell(0);
-        const gliderCell = row.insertCell(1);
-        const durationCell = row.insertCell(2);
-        const kilometerCell = row.insertCell(3);
-        pilotCell.innerHTML = pilotName;
-        gliderCell.innerHTML = gliderName;
-        durationCell.innerHTML = durationString;
-        kilometerCell.innerHTML = kilometers.toFixed(2);
-      });
-    };
-    console.log("HI");
-    fileReader.readAsText(file);
-  }
-}
 
 //single file input
 fileInput.addEventListener("change", function () {
@@ -162,9 +121,7 @@ fileInput.addEventListener("change", function () {
       });
     };
     reader.readAsText(file);
-  } else {
-    processFiles(files);
-  }
+  } 
 });
 
 
@@ -357,11 +314,6 @@ playButton.addEventListener("click", function () {
     cancelAnimationFrame(animationFrameId);
   }
 });
-
-
-
-
-
 // Global animation speed
 let speed = 10;
 
